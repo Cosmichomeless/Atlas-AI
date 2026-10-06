@@ -62,7 +62,7 @@ def db_session(db_engine: Engine) -> Iterator[Session]:
 
 
 @pytest.fixture
-def storage(tmp_path: Path) -> FileStorage:
+def storage(tmp_path: Path) -> LocalFileStorage:
     """Almacenamiento en un directorio temporal: los tests nunca escriben en `storage/`."""
     return LocalFileStorage(tmp_path / "storage")
 

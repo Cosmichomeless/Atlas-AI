@@ -88,7 +88,7 @@ CORS only allows `FRONTEND_ORIGIN` with credentials (headers `Content-Type`, `X-
 
 ## Documents
 
-Both endpoints require a session (`401 unauthorized` otherwise) and only ever see the caller's documents.
+All endpoints require a session (`401 unauthorized` otherwise) and only ever see the caller's documents.
 
 - `GET /api/v1/documents?limit=20&offset=0&status=READY` — `{items, total, limit, offset}`, newest first
   (ties broken by id so pages never overlap). `limit` is 1–100, `offset` >= 0, `status` optional; invalid
@@ -96,6 +96,13 @@ Both endpoints require a session (`401 unauthorized` otherwise) and only ever se
 - `GET /api/v1/documents/{id}` — the same plus `error_summary`, `attempts`, `processing_started_at` and
   `processed_at`. A missing id and another user's id return the identical `404 document_not_found`, so
   nothing reveals whether a document exists. Owner and worker lease are never exposed.
+- `POST /api/v1/documents` — multipart upload (`file` field) of a PDF, TXT or Markdown file; creates a
+  `UPLOADED` document and returns `201` with the detail. The type is deduced from the extension
+  (`.pdf`, `.txt`, `.md`, `.markdown`) and checked against the real content (`%PDF-` header, or UTF-8
+  text without NUL bytes); the client's `Content-Type` is ignored. Errors: `415 unsupported_media_type`,
+  `422 empty_file` / `invalid_filename`, `413 file_too_large` (limit `MAX_UPLOAD_MB`, also checked early
+  against `Content-Length`). A rejected upload leaves no database row and no file; if saving the row
+  fails, the stored file is removed. The filename is sanitized metadata only.
 
 ### File storage
 
