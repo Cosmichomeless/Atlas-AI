@@ -149,6 +149,8 @@ activemq-data/
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
 env/
@@ -216,3 +218,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node / Next.js
+node_modules/
+.next/
+
+# Archivos subidos en local y datos de desarrollo
+storage/
+
+# Configuración local de Claude Code
+.claude/settings.local.json
+
+# macOS
+.DS_Store

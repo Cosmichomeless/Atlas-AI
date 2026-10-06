@@ -5,4 +5,15 @@ TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
     "postgresql+psycopg://atlas:atlas_dev_password@localhost:5433/atlas_test",
 )
-os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+
+# La suite nunca debe usar proveedores reales ni la base de desarrollo, aunque exista un `.env`
+# con claves: las variables de entorno tienen prioridad sobre ese archivo.
+os.environ.update(
+    {
+        "APP_ENV": "test",
+        "DATABASE_URL": TEST_DATABASE_URL,
+        "EMBEDDING_PROVIDER": "fake",
+        "LLM_PROVIDER": "fake",
+        "OPENAI_API_KEY": "",
+    }
+)

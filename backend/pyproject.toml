@@ -17,6 +17,7 @@ dev = [
     "httpx2>=2.13.1",
     "mypy>=1.11",
     "pytest>=8.3",
+    "python-dotenv>=1.2.4",
     "ruff>=0.6",
 ]
 

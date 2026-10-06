@@ -25,6 +25,18 @@ The API listens on <http://127.0.0.1:8000>:
 - `GET /health/db` — readiness probe: checks the PostgreSQL connection and that `pgvector` is enabled
 - `GET /docs` — Swagger UI, `GET /openapi.json` — OpenAPI schema
 
+## Configuration
+
+Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository
+root, then from defaults. Copy `.env.example` to `.env` to start; `.env` is ignored by git, so real secrets
+never reach the repository. The example documents the API, database, storage and AI provider variables.
+
+- `EMBEDDING_PROVIDER` / `LLM_PROVIDER` default to `fake` (deterministic, no network). Setting either to
+  `openai` requires `OPENAI_API_KEY`.
+- `APP_ENV=production` requires `SECRET_KEY` (>= 32 characters).
+- Secrets are `SecretStr`: they are masked in `repr()` and logs.
+- The test suite forces `APP_ENV=test` and `fake` providers regardless of `.env`.
+
 ## Database
 
 PostgreSQL 16 with [pgvector](https://github.com/pgvector/pgvector) runs locally through Docker Compose
