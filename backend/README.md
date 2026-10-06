@@ -49,6 +49,13 @@ uv run python -m app.openapi_export        # from backend/
 npm run api:types                          # from frontend/
 ```
 
+## Accounts
+
+`POST /api/v1/auth/register` (`{email, password}`) creates an account and returns `{id, email, created_at}`
+— never the hash. Emails are trimmed and lowercased; passwords must be 10–128 characters and are stored
+as Argon2id hashes (`app/core/security.py`). A repeated email returns `409 email_already_registered`;
+invalid data returns `422` with per-field `details` (the submitted password is never echoed back).
+
 ## Configuration
 
 Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository
