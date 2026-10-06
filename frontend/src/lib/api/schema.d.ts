@@ -144,9 +144,29 @@ export interface paths {
         };
         /**
          * Listar mis documentos
-         * @description Solo devuelve documentos del usuario autenticado. Paginación y estados llegan en #13.
+         * @description Documentos del usuario autenticado, los más recientes primero, paginados.
          */
         get: operations["list_documents_api_v1_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver un documento
+         * @description Detalle con el estado de ingestión. Un ID inexistente o ajeno devuelve el mismo 404.
+         */
+        get: operations["get_document_api_v1_documents__document_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -174,11 +194,64 @@ export interface components {
             /** Pgvector Version */
             pgvector_version: string;
         };
+        /**
+         * DocumentDetail
+         * @description Resumen más el progreso de ingestión; nunca expone propietario ni datos del worker.
+         */
+        DocumentDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Filename */
+            filename: string;
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            status: components["schemas"]["DocumentStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Error Summary
+             * @description Último error de procesamiento, si lo hubo.
+             */
+            error_summary: string | null;
+            /** Attempts */
+            attempts: number;
+            /** Processing Started At */
+            processing_started_at: string | null;
+            /** Processed At */
+            processed_at: string | null;
+        };
         /** DocumentList */
         DocumentList: {
             /** Items */
             items: components["schemas"]["DocumentSummary"][];
+            /**
+             * Total
+             * @description Documentos que cumplen el filtro, sin paginar.
+             */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
         };
+        /**
+         * DocumentStatus
+         * @enum {string}
+         */
+        DocumentStatus: "UPLOADED" | "PROCESSING" | "READY" | "FAILED";
         /** DocumentSummary */
         DocumentSummary: {
             /**
@@ -186,11 +259,23 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Filename */
+            filename: string;
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            status: components["schemas"]["DocumentStatus"];
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** ErrorBody */
         ErrorBody: {
@@ -670,7 +755,12 @@ export interface operations {
     };
     list_documents_api_v1_documents_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+                /** @description Filtrar por estado. */
+                status?: components["schemas"]["DocumentStatus"] | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -697,6 +787,73 @@ export interface operations {
             };
             /** @description No tienes permiso para realizar esta acción. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Los datos enviados no son válidos. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error interno del servidor. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_document_api_v1_documents__document_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Autenticación requerida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tienes permiso para realizar esta acción. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Recurso no encontrado. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
