@@ -56,6 +56,17 @@ npm run api:types                          # from frontend/
 as Argon2id hashes (`app/core/security.py`). A repeated email returns `409 email_already_registered`;
 invalid data returns `422` with per-field `details` (the submitted password is never echoed back).
 
+### Sessions
+
+`POST /api/v1/auth/login` validates credentials and creates a server-side session (`sessions` table; only
+the SHA-256 of the random token is stored). The token travels in the `atlas_session` cookie (HttpOnly,
+SameSite=Lax, Secure in production). `POST /api/v1/auth/logout` deletes the session and clears the cookie;
+`GET /api/v1/auth/me` returns the current user. Sessions last `SESSION_TTL_HOURS` (default 168).
+
+Protect a route with the `CurrentUser` dependency (`app.features.auth.dependencies`): anonymous or invalid
+sessions get `401 unauthorized`. A wrong password and an unknown email return the same
+`401 invalid_credentials`.
+
 ## Configuration
 
 Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository
