@@ -86,6 +86,17 @@ Every mutating request (POST/PUT/PATCH/DELETE under `/api/v1`, login and logout 
 CORS only allows `FRONTEND_ORIGIN` with credentials (headers `Content-Type`, `X-CSRF-Token`,
 `X-Request-ID`). Tests use the `client` fixture (already sends the token) or `raw_client` (does not).
 
+## Documents
+
+Both endpoints require a session (`401 unauthorized` otherwise) and only ever see the caller's documents.
+
+- `GET /api/v1/documents?limit=20&offset=0&status=READY` — `{items, total, limit, offset}`, newest first
+  (ties broken by id so pages never overlap). `limit` is 1–100, `offset` >= 0, `status` optional; invalid
+  values return `422`. Items carry `id, filename, content_type, size_bytes, status, created_at, updated_at`.
+- `GET /api/v1/documents/{id}` — the same plus `error_summary`, `attempts`, `processing_started_at` and
+  `processed_at`. A missing id and another user's id return the identical `404 document_not_found`, so
+  nothing reveals whether a document exists. Owner and worker lease are never exposed.
+
 ## Configuration
 
 Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository
@@ -147,7 +158,7 @@ Models inherit from `app.core.base.Base` (deterministic constraint naming) and m
   can only be born `UPLOADED`. Use `document.transition_to(status, error_summary=..., lease_expires_at=...)`:
   it records dates, increments `attempts` on `PROCESSING`, requires an error summary for `FAILED` and clears
   the lease when leaving `PROCESSING`.
-- Always query documents through `app.features.documents.queries` (`list_owned`, `get_owned`): they
+- Always query documents through `app.features.documents.queries` (`list_owned_page`, `get_owned`): they
   require the owner id, and a foreign or missing id both return `None`.
 
 Tests get an isolated session (`db_session` fixture) on `atlas_test` migrated to `head`; each test is
