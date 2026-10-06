@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Atlas AI backend: document ingestion, retrieval and grounded answers."
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.13",
     "fastapi>=0.115",
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.4",
