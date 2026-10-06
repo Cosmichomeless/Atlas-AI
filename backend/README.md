@@ -16,7 +16,7 @@ Run from `backend/`:
 | Start the API (reload) | `uv run uvicorn app.main:app --reload` |
 | Lint | `uv run ruff check .` |
 | Check formatting | `uv run ruff format --check .` |
-| Typecheck (strict) | `uv run mypy app tests` |
+| Typecheck (strict) | `uv run mypy app tests migrations` |
 | Tests | `uv run pytest` |
 
 The API listens on <http://127.0.0.1:8000>:
@@ -42,6 +42,22 @@ The first start creates the `atlas` and `atlas_test` databases and enables the `
 ```bash
 export DATABASE_URL="postgresql+psycopg://atlas:atlas_dev_password@localhost:5433/atlas"
 ```
+
+### Migrations (Alembic)
+
+The schema is versioned with Alembic (`migrations/`). The URL comes from `DATABASE_URL`.
+
+| Task | Command |
+|---|---|
+| Apply all migrations (idempotent) | `uv run alembic upgrade head` |
+| Current revision | `uv run alembic current` |
+| New migration | `uv run alembic revision --autogenerate -m "message"` |
+| Roll back one revision | `uv run alembic downgrade -1` |
+| Detect model/schema drift | `uv run alembic check` |
+
+An empty database is created by running `uv run alembic upgrade head`; running it again changes nothing.
+Models inherit from `app.core.base.Base` (deterministic constraint naming) and must be imported in
+`migrations/env.py` so autogenerate sees them.
 
 Verify the extension: `curl localhost:8000/health/db` → `{"status":"ok","pgvector_version":"0.8.7"}`.
 
