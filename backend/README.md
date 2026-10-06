@@ -136,8 +136,17 @@ Models inherit from `app.core.base.Base` (deterministic constraint naming) and m
 
 - `users` — UUID id, unique lowercase `email` (a `CHECK` makes uniqueness case-insensitive), `password_hash`,
   `created_at`. Emails must be normalised to lowercase before insert.
-- `documents` — UUID id, `owner_id` (`NOT NULL`, FK to `users`, `ON DELETE CASCADE`), `created_at`.
-  Metadata and ingestion states arrive with the Documents epic.
+- `documents` — UUID id, `owner_id` (`NOT NULL`, FK to `users`, `ON DELETE CASCADE`), metadata (`filename`,
+  `content_type`, `size_bytes >= 0`), ingestion `status`, `attempts`, `error_summary` (max 500 chars), and the
+  dates `created_at`, `updated_at`, `processing_started_at`, `processed_at`, plus `lease_expires_at` for the
+  worker lease. `status` is `UPLOADED | PROCESSING | READY | FAILED` (varchar + `CHECK`, indexed).
+
+  Lifecycle (`app/features/documents/states.py`): `UPLOADED → PROCESSING → READY`, `PROCESSING → FAILED`, and
+  back to `UPLOADED` from `READY` (reindex), `FAILED` (retry) or `PROCESSING` (worker crash recovery). Anything
+  else raises `InvalidStatusTransitionError`, also when assigning `document.status` directly, and a document
+  can only be born `UPLOADED`. Use `document.transition_to(status, error_summary=..., lease_expires_at=...)`:
+  it records dates, increments `attempts` on `PROCESSING`, requires an error summary for `FAILED` and clears
+  the lease when leaving `PROCESSING`.
 - Always query documents through `app.features.documents.queries` (`list_owned`, `get_owned`): they
   require the owner id, and a foreign or missing id both return `None`.
 
