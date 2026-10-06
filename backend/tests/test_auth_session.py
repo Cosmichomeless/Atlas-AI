@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.features.auth.cookies import SESSION_COOKIE
 from app.features.auth.models import AuthSession
 from app.features.auth.service import hash_token
-from app.features.documents.models import Document
+from tests.factories import make_document
 
 CREDENTIALS = {"email": "ana@example.com", "password": "correct horse battery"}
 
@@ -102,9 +102,7 @@ def test_documents_are_scoped_to_the_logged_in_user(
 ) -> None:
     ana = register(client)
     ben = register(client, email="ben@example.com")
-    db_session.add_all(
-        [Document(owner_id=uuid.UUID(ana["id"])), Document(owner_id=uuid.UUID(ben["id"]))]
-    )
+    db_session.add_all([make_document(uuid.UUID(ana["id"])), make_document(uuid.UUID(ben["id"]))])
     db_session.flush()
 
     client.post("/api/v1/auth/login", json=CREDENTIALS)

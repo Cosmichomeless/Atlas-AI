@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.features.documents import queries
 from app.features.documents.models import Document
 from app.features.users.models import User
+from tests.factories import make_document
 
 
 def make_user(session: Session, email: str) -> User:
@@ -42,19 +43,19 @@ def test_email_uniqueness_ignores_case(db_session: Session) -> None:
 
 def test_document_requires_owner(db_session: Session) -> None:
     with pytest.raises(IntegrityError):
-        db_session.add(Document(owner_id=None))
+        db_session.add(make_document(None))
         db_session.flush()
 
 
 def test_document_owner_must_exist(db_session: Session) -> None:
     with pytest.raises(IntegrityError):
-        db_session.add(Document(owner_id=uuid.uuid4()))
+        db_session.add(make_document(uuid.uuid4()))
         db_session.flush()
 
 
 def test_deleting_user_deletes_their_documents(db_session: Session) -> None:
     user = make_user(db_session, "ana@example.com")
-    db_session.add(Document(owner_id=user.id))
+    db_session.add(make_document(user.id))
     db_session.flush()
 
     db_session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user.id})
@@ -65,8 +66,8 @@ def test_deleting_user_deletes_their_documents(db_session: Session) -> None:
 def test_queries_only_return_the_owners_documents(db_session: Session) -> None:
     ana = make_user(db_session, "ana@example.com")
     ben = make_user(db_session, "ben@example.com")
-    mine = Document(owner_id=ana.id)
-    theirs = Document(owner_id=ben.id)
+    mine = make_document(ana.id)
+    theirs = make_document(ben.id)
     db_session.add_all([mine, theirs])
     db_session.flush()
 
@@ -77,7 +78,7 @@ def test_queries_only_return_the_owners_documents(db_session: Session) -> None:
 def test_foreign_and_missing_documents_are_indistinguishable(db_session: Session) -> None:
     ana = make_user(db_session, "ana@example.com")
     ben = make_user(db_session, "ben@example.com")
-    theirs = Document(owner_id=ben.id)
+    theirs = make_document(ben.id)
     db_session.add(theirs)
     db_session.flush()
 
