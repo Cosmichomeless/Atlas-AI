@@ -67,6 +67,25 @@ Protect a route with the `CurrentUser` dependency (`app.features.auth.dependenci
 sessions get `401 unauthorized`. A wrong password and an unknown email return the same
 `401 invalid_credentials`.
 
+### Cookies, CSRF and CORS
+
+Cookies (`atlas_session`, `atlas_csrf`) are always HttpOnly. `COOKIE_SAMESITE` (`lax` default, `strict`,
+`none`) and `COOKIE_SECURE` (empty = Secure only when `APP_ENV=production`) control the other attributes;
+`none` requires Secure, and production refuses non-Secure cookies.
+
+Every mutating request (POST/PUT/PATCH/DELETE under `/api/v1`, login and logout included) must pass
+`app/api/csrf.py`, applied once on the API router so new routes are protected by default:
+
+1. `GET /api/v1/auth/csrf` returns `{csrf_token}` and sets it in the HttpOnly `atlas_csrf` cookie (signed
+   double-submit: `nonce.HMAC(SECRET_KEY, nonce)`; without `SECRET_KEY` outside production a random
+   per-process key is used).
+2. The client sends the token in `X-CSRF-Token`. It must equal the cookie and carry a valid signature,
+   otherwise `403 csrf_failed` (checked before body validation).
+3. If the browser sends `Origin`, it must be exactly `FRONTEND_ORIGIN` (otherwise `403 csrf_failed`).
+
+CORS only allows `FRONTEND_ORIGIN` with credentials (headers `Content-Type`, `X-CSRF-Token`,
+`X-Request-ID`). Tests use the `client` fixture (already sends the token) or `raw_client` (does not).
+
 ## Configuration
 
 Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository
@@ -75,7 +94,7 @@ never reach the repository. The example documents the API, database, storage and
 
 - `EMBEDDING_PROVIDER` / `LLM_PROVIDER` default to `fake` (deterministic, no network). Setting either to
   `openai` requires `OPENAI_API_KEY`.
-- `APP_ENV=production` requires `SECRET_KEY` (>= 32 characters).
+- `APP_ENV=production` requires `SECRET_KEY` (>= 32 characters) and Secure cookies.
 - Secrets are `SecretStr`: they are masked in `repr()` and logs.
 - The test suite forces `APP_ENV=test` and `fake` providers regardless of `.env`.
 

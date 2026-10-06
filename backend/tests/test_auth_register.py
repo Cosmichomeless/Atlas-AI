@@ -1,28 +1,13 @@
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core.db import get_session
 from app.core.security import hash_password, password_needs_rehash, verify_password
 from app.features.users import service
 from app.features.users.models import User
-from app.main import create_app
 
 URL = "/api/v1/auth/register"
 VALID = {"email": "ana@example.com", "password": "correct horse battery"}
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    app = create_app()
-
-    def override() -> Iterator[Session]:
-        yield db_session
-
-    app.dependency_overrides[get_session] = override
-    yield TestClient(app)
 
 
 def test_valid_registration_creates_account_without_exposing_hash(

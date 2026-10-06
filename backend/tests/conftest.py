@@ -5,9 +5,13 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
+
+from app.core.db import get_session
+from app.main import create_app
 
 # Credenciales de desarrollo local definidas en docker-compose.yml (solo para la base de pruebas).
 TEST_DATABASE_URL = os.environ.get(
@@ -54,3 +58,24 @@ def db_session(db_engine: Engine) -> Iterator[Session]:
         session.close()
         outer.rollback()
         connection.close()
+
+
+@pytest.fixture
+def raw_client(db_session: Session) -> Iterator[TestClient]:
+    """Cliente sin credenciales CSRF: sirve para probar la defensa CSRF en sí."""
+    app = create_app()
+
+    def override() -> Iterator[Session]:
+        yield db_session
+
+    app.dependency_overrides[get_session] = override
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def client(raw_client: TestClient) -> TestClient:
+    """Cliente que se comporta como el frontend: obtiene el token CSRF y lo envía siempre."""
+    token = raw_client.get("/api/v1/auth/csrf").json()["csrf_token"]
+    raw_client.headers["X-CSRF-Token"] = token
+    return raw_client
