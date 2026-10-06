@@ -1,0 +1,28 @@
+# Servicios locales de Atlas AI.
+#   docker compose up -d db      # arranca PostgreSQL + pgvector
+#   docker compose down          # detiene (los datos se conservan en el volumen)
+#   docker compose down -v       # detiene y borra los datos
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: atlas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-atlas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atlas_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-atlas}
+      POSTGRES_TEST_DB: ${POSTGRES_TEST_DB:-atlas_test}
+    ports:
+      # Solo accesible desde la propia máquina. 5433 evita chocar con un PostgreSQL local en 5432.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - atlas_pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  atlas_pgdata:
