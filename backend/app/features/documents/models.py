@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, validates
 from app.core.base import Base
 from app.core.types import created_at_column, uuid_pk
 from app.features.documents.states import DocumentStatus, ensure_transition
+from app.features.documents.storage import MAX_KEY_LENGTH, document_key
 
 ERROR_SUMMARY_MAX_LENGTH = 500
 
@@ -34,6 +35,8 @@ class Document(Base):
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     content_type: Mapped[str] = mapped_column(String(127), nullable=False)
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    # Referencia al archivo original en el almacenamiento privado; la base nunca guarda binarios.
+    storage_key: Mapped[str] = mapped_column(String(MAX_KEY_LENGTH), unique=True, nullable=False)
 
     status: Mapped[DocumentStatus] = mapped_column(
         Enum(
@@ -59,6 +62,9 @@ class Document(Base):
     lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     def __init__(self, **kwargs: Any) -> None:
+        kwargs.setdefault("id", uuid.uuid4())
+        if kwargs.get("owner_id") is not None:
+            kwargs.setdefault("storage_key", document_key(kwargs["owner_id"], kwargs["id"]))
         kwargs.setdefault("status", DocumentStatus.UPLOADED)
         kwargs.setdefault("attempts", 0)
         super().__init__(**kwargs)
