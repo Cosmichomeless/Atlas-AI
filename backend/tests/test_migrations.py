@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 
@@ -29,6 +30,9 @@ def empty_database() -> Iterator[str]:
         admin.dispose()
 
 
+HEAD = ScriptDirectory(str(BACKEND_DIR / "migrations")).get_current_head()
+
+
 def _alembic(url: str) -> Config:
     cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     cfg.attributes["url"] = url
@@ -41,7 +45,7 @@ def test_upgrade_creates_schema_from_empty_database(empty_database: str) -> None
     engine = create_engine(empty_database)
     with engine.connect() as conn:
         assert conn.execute(text("SELECT 1 FROM pg_extension WHERE extname='vector'")).scalar()
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0001"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == HEAD
     engine.dispose()
 
 
@@ -59,7 +63,7 @@ def test_upgrade_is_idempotent_and_keeps_existing_data(empty_database: str) -> N
     with engine.connect() as conn:
         assert conn.execute(text("SELECT label FROM sentinel WHERE id = 1")).scalar() == "keep me"
         assert conn.execute(text("SELECT count(*) FROM alembic_version")).scalar() == 1
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0001"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == HEAD
     engine.dispose()
 
 

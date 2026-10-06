@@ -95,6 +95,18 @@ An empty database is created by running `uv run alembic upgrade head`; running i
 Models inherit from `app.core.base.Base` (deterministic constraint naming) and must be imported in
 `migrations/env.py` so autogenerate sees them.
 
+### Data model
+
+- `users` — UUID id, unique lowercase `email` (a `CHECK` makes uniqueness case-insensitive), `password_hash`,
+  `created_at`. Emails must be normalised to lowercase before insert.
+- `documents` — UUID id, `owner_id` (`NOT NULL`, FK to `users`, `ON DELETE CASCADE`), `created_at`.
+  Metadata and ingestion states arrive with the Documents epic.
+- Always query documents through `app.features.documents.queries` (`list_owned`, `get_owned`): they
+  require the owner id, and a foreign or missing id both return `None`.
+
+Tests get an isolated session (`db_session` fixture) on `atlas_test` migrated to `head`; each test is
+rolled back.
+
 Verify the extension: `curl localhost:8000/api/v1/health/db` → `{"status":"ok","pgvector_version":"0.8.7"}`.
 
 Tests use the `atlas_test` database (override with `TEST_DATABASE_URL`); start the database before `uv run pytest`.
