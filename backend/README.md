@@ -21,9 +21,33 @@ Run from `backend/`:
 
 The API listens on <http://127.0.0.1:8000>:
 
-- `GET /health` — liveness probe
-- `GET /health/db` — readiness probe: checks the PostgreSQL connection and that `pgvector` is enabled
+- `GET /health` — liveness probe (outside the versioned contract, for orchestrators)
+- `GET /api/v1/health` — health endpoint of the versioned API
+- `GET /api/v1/health/db` — readiness probe: checks the PostgreSQL connection and that `pgvector` is enabled
 - `GET /docs` — Swagger UI, `GET /openapi.json` — OpenAPI schema
+
+## API contract
+
+All business endpoints live under `/api/v1` (`app/api/v1/router.py`). Every error uses one format:
+
+```json
+{"error": {"code": "not_found", "message": "Recurso no encontrado.", "request_id": "…", "details": null}}
+```
+
+- `code` is a stable machine-readable string; `message` is user-facing (Spanish); `details` lists
+  `{loc, message, type}` per field on `422` validation errors.
+- Raise `AppError(status, code, message)` from `app.api.errors`; declare it in OpenAPI with
+  `responses=error_responses(404, ...)`. Unhandled exceptions return `500` without leaking internals.
+- Every response carries `X-Request-ID` (the client's value is kept if it matches `[A-Za-z0-9._-]{1,64}`).
+- CORS only allows `FRONTEND_ORIGIN`, with credentials.
+
+The contract is exported to `backend/openapi.json` and committed. After changing endpoints or schemas,
+regenerate it (a test fails if it drifts) and then the frontend types:
+
+```bash
+uv run python -m app.openapi_export        # from backend/
+npm run api:types                          # from frontend/
+```
 
 ## Configuration
 
@@ -71,6 +95,6 @@ An empty database is created by running `uv run alembic upgrade head`; running i
 Models inherit from `app.core.base.Base` (deterministic constraint naming) and must be imported in
 `migrations/env.py` so autogenerate sees them.
 
-Verify the extension: `curl localhost:8000/health/db` → `{"status":"ok","pgvector_version":"0.8.7"}`.
+Verify the extension: `curl localhost:8000/api/v1/health/db` → `{"status":"ok","pgvector_version":"0.8.7"}`.
 
 Tests use the `atlas_test` database (override with `TEST_DATABASE_URL`); start the database before `uv run pytest`.

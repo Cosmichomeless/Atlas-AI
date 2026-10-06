@@ -18,7 +18,7 @@ def test_pgvector_extension_enabled() -> None:
 
 
 def test_health_db_ok() -> None:
-    response = TestClient(app).get("/health/db")
+    response = TestClient(app).get("/api/v1/health/db")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
@@ -30,9 +30,10 @@ def test_health_db_unavailable_returns_503(monkeypatch: pytest.MonkeyPatch) -> N
     config.get_settings.cache_clear()
     db.get_engine.cache_clear()
     try:
-        response = TestClient(app).get("/health/db")
+        response = TestClient(app).get("/api/v1/health/db")
     finally:
         monkeypatch.undo()
         config.get_settings.cache_clear()
         db.get_engine.cache_clear()
     assert response.status_code == 503
+    assert response.json()["error"]["code"] == "database_unavailable"
