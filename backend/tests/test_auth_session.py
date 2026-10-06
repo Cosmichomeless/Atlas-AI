@@ -1,32 +1,16 @@
 import uuid
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_session
 from app.features.auth.cookies import SESSION_COOKIE
 from app.features.auth.models import AuthSession
 from app.features.auth.service import hash_token
 from app.features.documents.models import Document
-from app.main import create_app
 
 CREDENTIALS = {"email": "ana@example.com", "password": "correct horse battery"}
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    app = create_app()
-
-    def override() -> Iterator[Session]:
-        yield db_session
-
-    app.dependency_overrides[get_session] = override
-    with TestClient(app) as test_client:
-        yield test_client
 
 
 def register(client: TestClient, **overrides: str) -> dict[str, str]:

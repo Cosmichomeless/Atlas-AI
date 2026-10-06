@@ -2,10 +2,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Response
 
+from app.api.csrf import CSRF_COOKIE, generate_token, is_valid_token
 from app.api.errors import AppError, error_responses
-from app.features.auth.cookies import SESSION_COOKIE, clear_session_cookie, set_session_cookie
+from app.features.auth.cookies import (
+    SESSION_COOKIE,
+    clear_session_cookie,
+    set_csrf_cookie,
+    set_session_cookie,
+)
 from app.features.auth.dependencies import CurrentUser, SessionDep
-from app.features.auth.schemas import LoginRequest, RegisterRequest, UserPublic
+from app.features.auth.schemas import CsrfToken, LoginRequest, RegisterRequest, UserPublic
 from app.features.auth.service import authenticate, create_session, delete_session
 from app.features.users.service import EmailAlreadyRegisteredError, create_user
 
@@ -66,3 +72,20 @@ def logout(
 )
 def me(user: CurrentUser) -> UserPublic:
     return UserPublic.model_validate(user)
+
+
+@router.get(
+    "/csrf",
+    summary="Obtener token CSRF",
+    description=(
+        "Emite (o reutiliza) un token CSRF firmado: lo fija en una cookie HttpOnly y lo devuelve "
+        "para que el cliente lo envíe en `X-CSRF-Token` en las operaciones mutables."
+    ),
+)
+def csrf(
+    response: Response,
+    cookie_token: Annotated[str | None, Cookie(alias=CSRF_COOKIE, include_in_schema=False)] = None,
+) -> CsrfToken:
+    token = cookie_token if cookie_token and is_valid_token(cookie_token) else generate_token()
+    set_csrf_cookie(response, token)
+    return CsrfToken(csrf_token=token)

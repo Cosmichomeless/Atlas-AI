@@ -28,5 +28,8 @@ partir del contrato OpenAPI del backend; no duplica lógica de negocio.
 - `schema.d.ts` — tipos generados (no editar a mano; `npm run api:types`).
 - `client.ts` — `api` (cliente con `credentials: "include"`, base `NEXT_PUBLIC_API_BASE_URL`) y `unwrap()`,
   que devuelve los datos o lanza `ApiError`.
+- `csrf.ts` — middleware instalado en el cliente: antes de POST/PUT/PATCH/DELETE obtiene el token de
+  `/api/v1/auth/csrf` (una vez, en memoria) y lo envía en `X-CSRF-Token`; lo descarta si el servidor responde
+  `csrf_failed`.
 - `errors.ts` — `ApiError` (`status`, `code`, `message`, `requestId`, `details`) para el formato común de errores.
 - `health.ts` — ejemplo: `getHealth()` y `getDatabaseHealth()`.

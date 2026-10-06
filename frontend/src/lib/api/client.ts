@@ -1,5 +1,6 @@
 import createClient from "openapi-fetch";
 
+import { createCsrfMiddleware } from "./csrf";
 import { ApiError, toApiError } from "./errors";
 import type { paths } from "./schema";
 
@@ -10,11 +11,14 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://loca
  * Las rutas, parámetros y respuestas se validan en compilación; no hay lógica de negocio aquí.
  */
 export function createApiClient(options: { baseUrl?: string; fetch?: typeof fetch } = {}) {
-  return createClient<paths>({
-    baseUrl: options.baseUrl ?? API_BASE_URL,
+  const baseUrl = options.baseUrl ?? API_BASE_URL;
+  const client = createClient<paths>({
+    baseUrl,
     credentials: "include",
     ...(options.fetch ? { fetch: options.fetch } : {}),
   });
+  client.use(createCsrfMiddleware({ baseUrl, ...(options.fetch ? { fetch: options.fetch } : {}) }));
+  return client;
 }
 
 export const api = createApiClient();
