@@ -97,6 +97,21 @@ Both endpoints require a session (`401 unauthorized` otherwise) and only ever se
   `processed_at`. A missing id and another user's id return the identical `404 document_not_found`, so
   nothing reveals whether a document exists. Owner and worker lease are never exposed.
 
+### File storage
+
+Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
+(`storage_key`, unique) and the bytes go to `STORAGE_DIR` (git-ignored, never served statically).
+`app/features/documents/storage.py` is the single boundary:
+
+- `FileStorage` is a protocol (`save`, `open`, `exists`, `delete`); `LocalFileStorage` is the disk
+  implementation and `get_storage()` is the FastAPI dependency, replaced by a temp directory in tests.
+- Keys are opaque and app-generated: `<owner_id>/<document_id>/original` (derivatives such as extracted
+  text use another last segment). Users' filenames are metadata only and never become part of a path.
+- Every key is validated (segments of `[A-Za-z0-9._-]`, no leading dot, no empty/`..`/absolute/NUL/
+  backslash segments) and every resolved path must stay inside the root, symlinks included.
+- Writes are atomic (temp file + rename), can enforce a size limit and leave nothing behind on failure.
+  Directories are `0700` and files `0600`.
+
 ## Configuration
 
 Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository

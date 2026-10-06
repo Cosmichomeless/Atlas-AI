@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from app.core.db import get_session
+from app.features.documents.storage import FileStorage, LocalFileStorage, get_storage
 from app.main import create_app
 
 # Credenciales de desarrollo local definidas en docker-compose.yml (solo para la base de pruebas).
@@ -61,9 +62,16 @@ def db_session(db_engine: Engine) -> Iterator[Session]:
 
 
 @pytest.fixture
-def raw_client(db_session: Session) -> Iterator[TestClient]:
+def storage(tmp_path: Path) -> FileStorage:
+    """Almacenamiento en un directorio temporal: los tests nunca escriben en `storage/`."""
+    return LocalFileStorage(tmp_path / "storage")
+
+
+@pytest.fixture
+def raw_client(db_session: Session, storage: FileStorage) -> Iterator[TestClient]:
     """Cliente sin credenciales CSRF: sirve para probar la defensa CSRF en sí."""
     app = create_app()
+    app.dependency_overrides[get_storage] = lambda: storage
 
     def override() -> Iterator[Session]:
         yield db_session
