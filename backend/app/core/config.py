@@ -31,6 +31,10 @@ class Settings(BaseSettings):
         description="Clave de firma de cookies; obligatoria en producción (>= 32 caracteres).",
     )
 
+    session_ttl_hours: int = Field(
+        default=168, gt=0, description="Duración de una sesión de usuario (7 días por defecto)."
+    )
+
     database_url: str = Field(
         description="URL SQLAlchemy de PostgreSQL, p. ej. postgresql+psycopg://user:pass@host:5433/db",
     )

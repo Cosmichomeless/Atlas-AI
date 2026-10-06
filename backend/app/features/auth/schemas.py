@@ -27,6 +27,13 @@ class RegisterRequest(BaseModel):
         return value
 
 
+class LoginRequest(BaseModel):
+    email: EmailStr = Field(max_length=254)
+    password: str = Field(
+        max_length=PASSWORD_MAX_LENGTH, json_schema_extra={"format": "password", "writeOnly": True}
+    )
+
+
 class UserPublic(BaseModel):
     """Datos de la cuenta visibles para su titular. Nunca incluye el hash."""
 
