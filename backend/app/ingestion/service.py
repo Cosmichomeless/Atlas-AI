@@ -10,6 +10,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import Select, and_, or_, select
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import Session
 
 from app.embeddings.provider import EmbeddingError, EmbeddingProvider
@@ -143,7 +144,11 @@ def _retry_or_fail(
 ) -> None:
     """Deshace la transacción y devuelve el documento a la cola, o lo da por FAILED."""
     session.rollback()
-    session.refresh(document)
+    try:
+        session.refresh(document)
+    except InvalidRequestError:
+        logger.warning("El documento %s se borró mientras se procesaba", document.id)
+        return
     if document.attempts >= max_attempts:
         document.transition_to(DocumentStatus.FAILED, error_summary=failure)
     else:
