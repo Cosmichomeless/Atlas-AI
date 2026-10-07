@@ -170,6 +170,23 @@ chunks)` is the only writer.
   (no text any more) keeps no stale chunks.
 - The owner is not copied into the chunks: retrieval joins `documents` and filters by `owner_id`.
 
+### Embedding provider
+
+`app/embeddings` hides the embedding service behind `EmbeddingProvider` (`embed(texts) -> list[Embedding]`),
+chosen by `EMBEDDING_PROVIDER` through `get_embedding_provider()`:
+
+- `fake` (default, also used by the tests): deterministic hashed bag-of-words vectors of unit length; the same
+  text always gives the same vector and texts sharing words land closer, so retrieval can be tested without any
+  paid call.
+- `openai`: `POST {OPENAI_BASE_URL}/embeddings` with `OPENAI_API_KEY` (`dimensions` is sent only to
+  `text-embedding-3-*`). Errors become `EmbeddingError` without the key or the text; tests use a mocked transport.
+- Every `Embedding` carries its `EmbeddingSpec`: provider, model, dimension and `version`
+  (`spec.key` → `openai/text-embedding-3-small/1536/v1`). The version belongs to the adapter and is bumped when
+  its output stops being comparable with older vectors; vectors from different specs must never be compared,
+  so whoever stores a vector stores its spec with it.
+- `embed` always validates: no blank texts, one vector per text, the configured dimension and finite values.
+  Large inputs are sent in batches of `max_batch_size`, keeping order.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference

@@ -8,6 +8,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "email-validator>=2",
     "fastapi>=0.115",
+    "httpx2>=2.13.1",
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.4",
     "pypdf>=6.19.0",
@@ -18,7 +19,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx2>=2.13.1",
     "mypy>=1.11",
     "pytest>=8.3",
     "python-dotenv>=1.2.4",
