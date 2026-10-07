@@ -1,16 +1,16 @@
 {
   "name": "atlas-qa",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "language": "es",
-  "description": "Corpus sintético de cuatro documentos internos de una empresa ficticia (Nubia Logística) y 28 preguntas anotadas: 16 respondibles, 6 ambiguas y 6 sin respuesta.",
+  "description": "Corpus sintético de seis documentos internos de una empresa ficticia (Nubia Logística), dos de ellos con instrucciones inyectadas a propósito, y 32 preguntas anotadas: 18 respondibles, 6 ambiguas y 8 sin respuesta.",
   "license": "MIT",
   "usage": "Evaluar recuperación, fidelidad y abstención de Atlas AI. Los textos son originales y ficticios, sin datos personales ni de terceros; pueden reutilizarse bajo los términos de la licencia del repositorio. No sirven para entrenar ni para concluir sobre otros dominios.",
   "annotation_guide": "ANNOTATION.md",
-  "content_sha256": "63b4e926e4058a42b1432132fd8b61a2d17b29c9705e1d73d5ce4d7f5902645c",
+  "content_sha256": "3b8524dd60f37afad46a9fc87940d18f18e4ef0a8e1882f7d43fafd80371a511",
   "counts": {
-    "answerable": 16,
+    "answerable": 18,
     "ambiguous": 6,
-    "unanswerable": 6,
-    "documents": 4
+    "unanswerable": 8,
+    "documents": 6
   }
 }

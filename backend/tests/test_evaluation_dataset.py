@@ -53,7 +53,7 @@ def find(questions: list[dict[str, Any]], qid: str) -> dict[str, Any]:
 def test_the_published_dataset_is_valid_and_versioned() -> None:
     dataset = load_dataset()
 
-    assert dataset.key == "atlas-qa@1.0.0"
+    assert dataset.key == "atlas-qa@1.1.0"
     assert dataset.manifest.license == "MIT"
     assert dataset.manifest.usage
     assert dataset.manifest.language == "es"
@@ -64,10 +64,10 @@ def test_the_published_dataset_is_valid_and_versioned() -> None:
 def test_it_includes_answerable_ambiguous_and_unanswerable_questions() -> None:
     dataset = load_dataset()
 
-    assert len(dataset.of_kind(Kind.ANSWERABLE)) == 16
+    assert len(dataset.of_kind(Kind.ANSWERABLE)) == 18
     assert len(dataset.of_kind(Kind.AMBIGUOUS)) == 6
-    assert len(dataset.of_kind(Kind.UNANSWERABLE)) == 6
-    assert len(dataset.questions) == dataset.manifest.counts["answerable"] + 12
+    assert len(dataset.of_kind(Kind.UNANSWERABLE)) == 8
+    assert len(dataset.questions) == dataset.manifest.counts["answerable"] + 14
 
 
 def test_answerable_questions_carry_evidence_and_key_facts() -> None:
@@ -101,7 +101,7 @@ def test_every_quote_is_literal_text_of_its_document() -> None:
 
 def test_the_validator_cli_summarises_a_valid_dataset(capsys: pytest.CaptureFixture[str]) -> None:
     assert ds.main([]) == 0
-    assert "atlas-qa@1.0.0" in capsys.readouterr().out
+    assert "atlas-qa@1.1.0" in capsys.readouterr().out
 
 
 # ── Cambios y anotaciones rotas ─────────────────────────────────────────────
@@ -229,3 +229,34 @@ def test_an_unreadable_dataset_raises_a_clear_error(
     monkeypatch.setattr(ds, "DATASETS_ROOT", tmp_path)
 
     assert any("No se pueden leer" in p for p in problems_of("inexistente"))
+
+
+def test_the_published_dataset_has_adversarial_probes_with_canaries() -> None:
+    dataset = ds.load_dataset()
+    probes = [q for q in dataset.questions if q.canaries]
+
+    assert {q.kind for q in probes} == {Kind.ANSWERABLE, Kind.UNANSWERABLE}
+    assert len(probes) >= 4
+    assert all(c.startswith("CANARIO-") for q in probes for c in q.canaries)
+
+
+def test_a_canary_missing_from_the_corpus_is_rejected(copy: Path) -> None:
+    edit_questions(copy, lambda qs: find(qs, "u007").update(canaries=["CANARIO-NO-EXISTE-0000"]))
+
+    assert any("u007" in p and "no aparece en ningún documento" in p for p in problems_of())
+
+
+def test_a_canary_that_belongs_to_a_correct_answer_is_rejected(copy: Path) -> None:
+    def change(questions: list[dict[str, Any]]) -> None:
+        find(questions, "q017")["key_facts"].append("CANARIO-ALFA-7731")
+
+    edit_questions(copy, change)
+
+    assert any("q017" in p and "forma parte de una respuesta correcta" in p for p in problems_of())
+
+
+@pytest.mark.parametrize("canaries", [[], "CANARIO-ALFA-7731", [""], [7]])
+def test_canaries_must_be_a_non_empty_list_of_strings(copy: Path, canaries: Any) -> None:
+    edit_questions(copy, lambda qs: find(qs, "u007").update(canaries=canaries))
+
+    assert any("u007" in p and "canaries" in p for p in problems_of())

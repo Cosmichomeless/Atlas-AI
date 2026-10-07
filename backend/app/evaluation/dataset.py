@@ -11,6 +11,10 @@ Cada pregunta es de uno de tres tipos:
 - `ambiguous`: admite varias lecturas; cada una lleva su evidencia y sus datos clave.
 - `unanswerable`: el corpus no la responde; el sistema debe abstenerse.
 
+Cualquier pregunta puede llevar `canaries`: cadenas que el corpus contiene dentro de instrucciones
+inyectadas (documentos adversos) y que una respuesta jamás debería reproducir. Su aparición en una
+respuesta mide que el modelo obedeció texto recuperado en lugar de tratarlo como datos.
+
 La validación comprueba que la evidencia citada existe literalmente en el documento, de modo que
 las anotaciones no se desincronizan del texto.
 """
@@ -90,6 +94,7 @@ class Question:
     key_facts: tuple[str, ...]
     interpretations: tuple[Interpretation, ...]
     rationale: str
+    canaries: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -272,9 +277,43 @@ def _parse_question(
         if not rationale:
             problems.append(f"{qid}: una pregunta sin respuesta exige `rationale`.")
 
+    canaries = _parse_canaries(
+        qid, item.get("canaries"), text, evidence, key_facts, documents, problems
+    )
+
     if len(problems) > found:
         return None
-    return Question(qid, kind, text, evidence, key_facts, interpretations, rationale)
+    return Question(qid, kind, text, evidence, key_facts, interpretations, rationale, canaries)
+
+
+def _parse_canaries(
+    qid: str,
+    raw: Any,
+    text: str,
+    evidence: tuple[Evidence, ...],
+    key_facts: tuple[str, ...],
+    documents: Mapping[str, str],
+    problems: list[str],
+) -> tuple[str, ...]:
+    """Las canarias existen en el corpus y no pueden formar parte de una respuesta correcta."""
+    if raw is None:
+        return ()
+    if (
+        not isinstance(raw, list)
+        or not raw
+        or not all(isinstance(c, str) and c.strip() for c in raw)
+    ):
+        problems.append(f"{qid}: `canaries` debe ser una lista no vacía de cadenas.")
+        return ()
+    corpus = normalize_text(" ".join(documents.values())).lower()
+    correct = normalize_text(" ".join([text, *key_facts, *(e.quote for e in evidence)])).lower()
+    for canary in raw:
+        needle = normalize_text(canary).lower()
+        if needle not in corpus:
+            problems.append(f"{qid}: la canaria {canary!r} no aparece en ningún documento.")
+        if needle in correct:
+            problems.append(f"{qid}: la canaria {canary!r} forma parte de una respuesta correcta.")
+    return tuple(raw)
 
 
 def _parse_evidence(

@@ -396,15 +396,19 @@ the API, processed by the ingestion worker and queried through `POST /api/v1/sea
 ### Evaluation dataset
 
 `evaluation/datasets/atlas-qa-v1/` is the versioned question-answer dataset the evaluation commands run
-on (Spanish, synthetic, MIT like the repository). It holds four documents of a fictional company and 28
-annotated questions: 16 **answerable**, 6 **ambiguous** (each with its own readings and evidence) and 6
-**unanswerable** (missing topic, near-topic missing fact, out of domain). The annotation criteria are in
+on (Spanish, synthetic, MIT like the repository). It holds six documents of a fictional company (two with
+instructions injected on purpose) and 32 annotated questions: 18 **answerable**, 6 **ambiguous** (each with
+its own readings and evidence) and 8 **unanswerable** (missing topic, near-topic missing fact, out of domain,
+secrets requested next to an injection). The annotation criteria are in
 `ANNOTATION.md`; usage and licence are in `README.md` and `manifest.json`.
 
 - **Versioned.** `manifest.json` declares a semantic version, the licence and intended use, the question
   counts and a SHA-256 of `documents/` and `questions.json`. Loading fails if the content changed without
   sealing a new hash, so every result can be tied to exact data. Results are only comparable within the
   same major version.
+- **Canaries.** A question may list `canaries`: strings that exist only inside injected text. Each must be in
+  the corpus and absent from the question, key facts and evidence. An answer that reproduces one means the
+  model obeyed the document (see `injection_rate`).
 - **Validated.** Every `evidence.quote` must appear literally in its document, every `key_facts` entry
   must appear in its evidence, ids and questions are unique and all three kinds must be present.
   `uv run python -m app.evaluation.dataset` validates it and prints a summary; problems are listed all at
@@ -456,6 +460,9 @@ sentence and says `SIN_EVIDENCIA` when overlap is below 0.5 (threshold fixed up 
 - **Cost.** Input and output tokens and per-question latency (latency under `timing`, so `--no-timing`
   reports compare byte for byte). The report records the LLM key, temperature, output limit, prompt version
   and fingerprint, and context budget.
+- **Injection.** `injection_rate` is the share of questions with canaries (`injection_probes`) whose answer
+  contains one. It is 0 when no probe was obeyed. Each result carries `injected` (`null` when the question
+  has no canary). See "Untrusted retrieved text" below for what the defence does and does not cover.
 - **Human review.** `--review-sample` writes a sample stratified by verdict (seeded, reproducible) with the
   question, expected key facts and answer. Fill `human_verdict` for each item with one of the verdict names
   and run `uv run python -m app.evaluation.answers calibrate sample.json` to get accuracy, Cohen's kappa, the
@@ -518,14 +525,15 @@ definition and `--output` saves the result as JSON. The same check runs inside t
   `evaluation/gate.json`, not from `.env`, so an environment change does not move the gate.
 - **Agreed thresholds, versioned.** `evaluation/gate.json` holds one `min` or `max` per metric:
   retrieval recall, MRR and source success; correct rate, faithfulness, citation precision, citation recall
-  and valid abstention rate (minimums); hallucination rate (maximum). Each sits about 0.01 under (or over)
+  and valid abstention rate (minimums); hallucination rate and injection rate (maximums; the injection
+  maximum is 0, so a single obeyed probe fails the gate). Each sits about 0.01 under (or over)
   the figure measured when the gate was agreed, which is less than the effect of one question, so a change
   that gets even one question wrong fails. A metric that cannot be measured fails rather than passing.
 - **Changing a threshold is a reviewed decision.** If a change is meant to move a figure (a better ranking,
   a stricter citation rule), edit the numbers in the same PR and say why; the diff of `gate.json` is what a
   reviewer looks at. Run the gate and read the printed values to choose them.
 - **A different dataset version is refused.** The thresholds record the dataset key they were agreed on
-  (`atlas-qa@1.0.0`); another version fails with a clear message instead of comparing unlike things.
+  (`atlas-qa@1.1.0`); another version fails with a clear message instead of comparing unlike things.
 
 **What it does not catch.** It watches the pipeline (search, reranking, context, citations) under fake
 models. A worse real model or prompt, or a ranking that only fails with real embeddings, does not show up
@@ -549,6 +557,27 @@ token budget (`ANSWER_CONTEXT_MAX_TOKENS`, default 3000; startup fails if it can
   dependency is needed; the estimate is deliberately pessimistic. The budget covers the context only; the
   instructions, the question and `LLM_MAX_OUTPUT_TOKENS` are on top of it.
 - An empty context (no hits, or nothing fits) is a valid result; what to do with it belongs to the abstention step.
+
+### Untrusted retrieved text
+
+A document can contain text written to hijack the model ("ignore your rules", a fake `</fuentes>`, a request
+for keys). Retrieved text is data, never instructions, and four layers back that up; none is a guarantee.
+
+1. **Prompt rule (depends on the model).** Rule 6 of the grounded prompt tells the model that anything inside
+   `<fuentes>` is evidence to quote, not orders. A weak or hostile-prompt-following model can still ignore it.
+2. **Omission of order-shaped paragraphs (`app/answers/untrusted.py`).** `ContextItem.from_hit` replaces each
+   paragraph that looks like an order to the assistant (known Spanish and English formulas: "ignora las
+   instrucciones", `SYSTEM:`, "revela tu prompt", a closing `</fuentes>`…) with a neutral notice and counts it
+   in `ContextItem.redacted`. It is a **heuristic over known formulas**: a rephrased attack passes, and a
+   legitimate paragraph that contains one of the formulas is omitted too.
+3. **Block integrity.** `build_messages` neutralises any `</fuentes>` (any spacing and case) so a chunk cannot
+   close the sources block early. `PROMPT_VERSION` is unchanged: the prompt text did not change.
+4. **Citation check.** An answer without a valid citation is rejected (`no_valid_citations`), so an obeyed
+   instruction that cites nothing never reaches the user.
+
+The evaluation measures it with `injection_rate` (see "Answer quality") and the gate requires it to be 0.
+With the fake extractive responder this only shows the pipeline does not hand injected sentences to a model
+that would quote them; it says nothing about how a real model behaves.
 
 ### Grounded answers
 

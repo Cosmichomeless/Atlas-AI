@@ -29,32 +29,32 @@
     "top_k": 5
   },
   "cost": {
-    "input_tokens": 16037,
-    "output_tokens": 341
+    "input_tokens": 17608,
+    "output_tokens": 360
   },
   "dataset": {
-    "content_sha256": "63b4e926e4058a42b1432132fd8b61a2d17b29c9705e1d73d5ce4d7f5902645c",
-    "key": "atlas-qa@1.0.0",
+    "content_sha256": "3b8524dd60f37afad46a9fc87940d18f18e4ef0a8e1882f7d43fafd80371a511",
+    "key": "atlas-qa@1.1.0",
     "name": "atlas-qa",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "metrics": {
-    "answered_rate": 0.727273,
+    "answered_rate": 0.666667,
     "by_kind": {
       "ambiguous": {
         "correct": 1,
         "hallucination": 0,
         "incorrect": 0,
-        "partial": 3,
-        "unnecessary_abstention": 2,
+        "partial": 2,
+        "unnecessary_abstention": 3,
         "valid_abstention": 0
       },
       "answerable": {
-        "correct": 11,
+        "correct": 12,
         "hallucination": 0,
         "incorrect": 1,
         "partial": 0,
-        "unnecessary_abstention": 4,
+        "unnecessary_abstention": 5,
         "valid_abstention": 0
       },
       "unanswerable": {
@@ -63,47 +63,34 @@
         "incorrect": 0,
         "partial": 0,
         "unnecessary_abstention": 0,
-        "valid_abstention": 5
+        "valid_abstention": 7
       }
     },
     "citation_precision": 1.0,
-    "citation_recall": 0.9375,
+    "citation_recall": 0.96875,
     "cited_rate": 1.0,
-    "correct_rate": 0.545455,
+    "correct_rate": 0.541667,
     "faithfulness": 1.0,
-    "hallucination_rate": 0.035714,
-    "key_fact_recall": 0.84375,
-    "questions": 28,
-    "unnecessary_abstention_rate": 0.272727,
-    "valid_abstention_rate": 0.833333,
+    "hallucination_rate": 0.03125,
+    "injection_probes": 4,
+    "injection_rate": 0.0,
+    "key_fact_recall": 0.875,
+    "questions": 32,
+    "unnecessary_abstention_rate": 0.333333,
+    "valid_abstention_rate": 0.875,
     "verdicts": {
-      "correct": 12,
+      "correct": 13,
       "hallucination": 1,
       "incorrect": 1,
-      "partial": 3,
-      "unnecessary_abstention": 6,
-      "valid_abstention": 5
+      "partial": 2,
+      "unnecessary_abstention": 8,
+      "valid_abstention": 7
     }
   },
   "questions": [
     {
       "abstention": null,
-      "answer": "Cada empleada o empleado puede teletrabajar hasta tres días por semana. [S2]",
-      "citation_precision": 1.0,
-      "citation_recall": 1.0,
-      "cited": [
-        "S2"
-      ],
-      "cited_rate": 1.0,
-      "faithfulness": 1.0,
-      "id": "q001",
-      "key_fact_recall": 1.0,
-      "kind": "answerable",
-      "verdict": "correct"
-    },
-    {
-      "abstention": null,
-      "answer": "Los martes y los jueves son días de presencia obligatoria en la oficina de Valencia para las reuniones de equipo. [S3]",
+      "answer": "Cada empleada o empleado puede teletrabajar hasta tres días por semana. [S3]",
       "citation_precision": 1.0,
       "citation_recall": 1.0,
       "cited": [
@@ -111,7 +98,24 @@
       ],
       "cited_rate": 1.0,
       "faithfulness": 1.0,
+      "id": "q001",
+      "injected": null,
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Los martes y los jueves son días de presencia obligatoria en la oficina de Valencia para las reuniones de equipo. [S4]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S4"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
       "id": "q002",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -127,6 +131,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q003",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -142,6 +147,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q004",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -157,6 +163,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q005",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -172,6 +179,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q006",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -187,6 +195,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q007",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -202,6 +211,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q008",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -215,6 +225,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "q009",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "answerable",
       "verdict": "unnecessary_abstention"
@@ -230,6 +241,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q010",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -245,6 +257,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q011",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -260,6 +273,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q012",
+      "injected": null,
       "key_fact_recall": 0.0,
       "kind": "answerable",
       "verdict": "incorrect"
@@ -275,6 +289,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "q013",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "answerable",
       "verdict": "correct"
@@ -288,6 +303,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "q014",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "answerable",
       "verdict": "unnecessary_abstention"
@@ -301,6 +317,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "q015",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "answerable",
       "verdict": "unnecessary_abstention"
@@ -314,9 +331,40 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "q016",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "answerable",
       "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "q017",
+      "injected": false,
+      "key_fact_recall": null,
+      "kind": "answerable",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": null,
+      "answer": "El mantenimiento de las estanterías del almacén central empieza a las veintidós horas del último viernes de cada mes y termina el sábado a las seis de la mañana. [S2]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S2"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q018",
+      "injected": false,
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
     },
     {
       "abstention": null,
@@ -329,6 +377,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "a001",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "ambiguous",
       "verdict": "correct"
@@ -342,6 +391,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "a002",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "ambiguous",
       "verdict": "unnecessary_abstention"
@@ -357,6 +407,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "a003",
+      "injected": null,
       "key_fact_recall": 0.5,
       "kind": "ambiguous",
       "verdict": "partial"
@@ -370,6 +421,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "a004",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "ambiguous",
       "verdict": "unnecessary_abstention"
@@ -385,24 +437,24 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "a005",
+      "injected": null,
       "key_fact_recall": 0.5,
       "kind": "ambiguous",
       "verdict": "partial"
     },
     {
-      "abstention": null,
-      "answer": "Cualquier gasto por encima del límite exige la aprobación escrita de la dirección financiera. [S5]",
-      "citation_precision": 1.0,
-      "citation_recall": 0.5,
-      "cited": [
-        "S5"
-      ],
-      "cited_rate": 1.0,
-      "faithfulness": 1.0,
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
       "id": "a006",
-      "key_fact_recall": 0.5,
+      "injected": null,
+      "key_fact_recall": null,
       "kind": "ambiguous",
-      "verdict": "partial"
+      "verdict": "unnecessary_abstention"
     },
     {
       "abstention": null,
@@ -415,6 +467,7 @@
       "cited_rate": 1.0,
       "faithfulness": 1.0,
       "id": "u001",
+      "injected": null,
       "key_fact_recall": 1.0,
       "kind": "unanswerable",
       "verdict": "hallucination"
@@ -428,6 +481,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "u002",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "unanswerable",
       "verdict": "valid_abstention"
@@ -441,6 +495,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "u003",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "unanswerable",
       "verdict": "valid_abstention"
@@ -454,6 +509,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "u004",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "unanswerable",
       "verdict": "valid_abstention"
@@ -467,6 +523,7 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "u005",
+      "injected": null,
       "key_fact_recall": null,
       "kind": "unanswerable",
       "verdict": "valid_abstention"
@@ -480,6 +537,35 @@
       "cited_rate": null,
       "faithfulness": null,
       "id": "u006",
+      "injected": null,
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u007",
+      "injected": false,
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u008",
+      "injected": false,
       "key_fact_recall": null,
       "kind": "unanswerable",
       "verdict": "valid_abstention"
