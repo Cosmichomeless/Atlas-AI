@@ -1,0 +1,410 @@
+{
+  "questions": [
+    {
+      "id": "q001",
+      "kind": "answerable",
+      "question": "¿Cuántos días a la semana puedo teletrabajar?",
+      "evidence": [
+        {
+          "document": "politica-teletrabajo.md",
+          "quote": "Cada empleada o empleado puede teletrabajar hasta tres días por semana."
+        }
+      ],
+      "key_facts": ["tres días"]
+    },
+    {
+      "id": "q002",
+      "kind": "answerable",
+      "question": "¿Qué días es obligatorio ir a la oficina?",
+      "evidence": [
+        {
+          "document": "politica-teletrabajo.md",
+          "quote": "Los martes y los jueves son días de presencia obligatoria en la oficina de Valencia para las reuniones de equipo."
+        }
+      ],
+      "key_facts": ["martes", "jueves"]
+    },
+    {
+      "id": "q003",
+      "kind": "answerable",
+      "question": "¿Cuánto abona la empresa al mes por los gastos de conexión del teletrabajo?",
+      "evidence": [
+        {
+          "document": "politica-teletrabajo.md",
+          "quote": "Además abona una compensación de cincuenta euros al mes en concepto de gastos de conexión y suministros."
+        }
+      ],
+      "key_facts": ["cincuenta euros"]
+    },
+    {
+      "id": "q004",
+      "kind": "answerable",
+      "question": "¿Cuánto tarda en llegar el equipo de sustitución si se avería mi portátil?",
+      "evidence": [
+        {
+          "document": "politica-teletrabajo.md",
+          "quote": "Las averías del portátil se comunican al servicio de Sistemas y el equipo de sustitución llega en un máximo de cuarenta y ocho horas."
+        }
+      ],
+      "key_facts": ["cuarenta y ocho horas"]
+    },
+    {
+      "id": "q005",
+      "kind": "answerable",
+      "question": "¿Cuál es el límite de manutención por día en un viaje al extranjero?",
+      "evidence": [
+        {
+          "document": "guia-gastos.md",
+          "quote": "La manutención tiene un límite de cuarenta y cinco euros por día en territorio nacional y de setenta euros por día en el extranjero."
+        }
+      ],
+      "key_facts": ["setenta euros"]
+    },
+    {
+      "id": "q006",
+      "kind": "answerable",
+      "question": "¿En qué plazo hay que subir las facturas a la aplicación Gastos?",
+      "evidence": [
+        {
+          "document": "guia-gastos.md",
+          "quote": "Las facturas se escanean y se suben a la aplicación Gastos en un plazo máximo de treinta días naturales desde la fecha del gasto."
+        }
+      ],
+      "key_facts": ["treinta días naturales"]
+    },
+    {
+      "id": "q007",
+      "kind": "answerable",
+      "question": "¿En qué nómina se paga un reembolso aprobado antes del día diez del mes?",
+      "evidence": [
+        {
+          "document": "guia-gastos.md",
+          "quote": "Las solicitudes aprobadas antes del día diez de cada mes se pagan en la nómina de ese mismo mes."
+        }
+      ],
+      "key_facts": ["nómina de ese mismo mes"]
+    },
+    {
+      "id": "q008",
+      "kind": "answerable",
+      "question": "¿En cuánto tiempo debe responder la persona de guardia a un incidente de nivel 1?",
+      "evidence": [
+        {
+          "document": "guia-incidentes.md",
+          "quote": "Para un incidente de nivel 1 la persona de guardia debe responder en cinco minutos y se abre una sala de crisis en el canal de incidentes."
+        }
+      ],
+      "key_facts": ["cinco minutos"]
+    },
+    {
+      "id": "q009",
+      "kind": "answerable",
+      "question": "¿Cada cuánto tiempo comunica el estado la persona coordinadora de un incidente?",
+      "evidence": [
+        {
+          "document": "guia-incidentes.md",
+          "quote": "Su trabajo consiste en mantener el canal ordenado, registrar la cronología y comunicar el estado cada treinta minutos."
+        }
+      ],
+      "key_facts": ["treinta minutos"]
+    },
+    {
+      "id": "q010",
+      "kind": "answerable",
+      "question": "¿En cuánto tiempo se notifica a la autoridad si hay pérdida de datos personales?",
+      "evidence": [
+        {
+          "document": "guia-incidentes.md",
+          "quote": "Si hubo pérdida de datos personales, el delegado de protección de datos notifica a la autoridad en un máximo de setenta y dos horas."
+        }
+      ],
+      "key_facts": ["setenta y dos horas"]
+    },
+    {
+      "id": "q011",
+      "kind": "answerable",
+      "question": "¿Cuántos caracteres debe tener como mínimo una contraseña?",
+      "evidence": [
+        {
+          "document": "normas-seguridad.md",
+          "quote": "Las contraseñas deben tener al menos catorce caracteres y no pueden reutilizarse entre servicios."
+        }
+      ],
+      "key_facts": ["catorce caracteres"]
+    },
+    {
+      "id": "q012",
+      "kind": "answerable",
+      "question": "¿Se acepta el SMS como segundo factor de autenticación?",
+      "evidence": [
+        {
+          "document": "normas-seguridad.md",
+          "quote": "Los mensajes SMS no se aceptan como segundo factor desde el año pasado."
+        }
+      ],
+      "key_facts": ["no se aceptan"]
+    },
+    {
+      "id": "q013",
+      "kind": "answerable",
+      "question": "¿Cuándo caducan los accesos de producción?",
+      "evidence": [
+        {
+          "document": "normas-seguridad.md",
+          "quote": "Los accesos de producción caducan a los noventa días y deben renovarse con una justificación."
+        }
+      ],
+      "key_facts": ["noventa días"]
+    },
+    {
+      "id": "q014",
+      "kind": "answerable",
+      "question": "¿Qué debo hacer y en qué plazo si pierdo un dispositivo personal con acceso a la empresa?",
+      "evidence": [
+        {
+          "document": "normas-seguridad.md",
+          "quote": "Si se pierde un dispositivo con acceso, se comunica a Sistemas en las dos horas siguientes para borrarlo en remoto."
+        }
+      ],
+      "key_facts": ["Sistemas", "dos horas"]
+    },
+    {
+      "id": "q015",
+      "kind": "answerable",
+      "question": "¿Cuándo se paga un reembolso que se aprueba después del día diez?",
+      "evidence": [
+        {
+          "document": "guia-gastos.md",
+          "quote": "Una vez aprobada la solicitud, Finanzas abona el reembolso en la nómina del mes siguiente."
+        }
+      ],
+      "key_facts": ["nómina del mes siguiente"]
+    },
+    {
+      "id": "q016",
+      "kind": "answerable",
+      "question": "¿Puedo trabajar desde el wifi de un aeropuerto?",
+      "evidence": [
+        {
+          "document": "politica-teletrabajo.md",
+          "quote": "Está prohibido trabajar desde redes wifi públicas, como las de cafeterías o aeropuertos."
+        }
+      ],
+      "key_facts": ["prohibido"]
+    },
+    {
+      "id": "a001",
+      "kind": "ambiguous",
+      "question": "¿Cuál es el límite por noche?",
+      "rationale": "No se indica si se trata de un alojamiento en España o fuera de España.",
+      "interpretations": [
+        {
+          "reading": "Límite de alojamiento por noche en España.",
+          "evidence": [
+            {
+              "document": "guia-gastos.md",
+              "quote": "El alojamiento tiene un límite de ciento diez euros por noche en España y de ciento sesenta euros por noche fuera de España."
+            }
+          ],
+          "key_facts": ["ciento diez euros"]
+        },
+        {
+          "reading": "Límite de alojamiento por noche fuera de España.",
+          "evidence": [
+            {
+              "document": "guia-gastos.md",
+              "quote": "El alojamiento tiene un límite de ciento diez euros por noche en España y de ciento sesenta euros por noche fuera de España."
+            }
+          ],
+          "key_facts": ["ciento sesenta euros"]
+        }
+      ]
+    },
+    {
+      "id": "a002",
+      "kind": "ambiguous",
+      "question": "¿En cuánto tiempo hay que avisar?",
+      "rationale": "Hay varios avisos con plazo distinto: una contraseña expuesta, un dispositivo perdido o la retirada del teletrabajo.",
+      "interpretations": [
+        {
+          "reading": "Plazo para avisar al equipo de seguridad tras introducir la contraseña en una página dudosa.",
+          "evidence": [
+            {
+              "document": "normas-seguridad.md",
+              "quote": "debe cambiarla enseguida y avisar al equipo de seguridad en menos de una hora."
+            }
+          ],
+          "key_facts": ["menos de una hora"]
+        },
+        {
+          "reading": "Plazo para comunicar a Sistemas la pérdida de un dispositivo con acceso.",
+          "evidence": [
+            {
+              "document": "normas-seguridad.md",
+              "quote": "Si se pierde un dispositivo con acceso, se comunica a Sistemas en las dos horas siguientes para borrarlo en remoto."
+            }
+          ],
+          "key_facts": ["dos horas"]
+        },
+        {
+          "reading": "Preaviso con el que se puede retirar una autorización de teletrabajo.",
+          "evidence": [
+            {
+              "document": "politica-teletrabajo.md",
+              "quote": "La autorización se revisa cada seis meses y puede retirarse con un preaviso de quince días."
+            }
+          ],
+          "key_facts": ["quince días"]
+        }
+      ]
+    },
+    {
+      "id": "a003",
+      "kind": "ambiguous",
+      "question": "¿Cada cuánto se revisa?",
+      "rationale": "No se dice qué se revisa: la autorización de teletrabajo o las acciones de mejora de un incidente.",
+      "interpretations": [
+        {
+          "reading": "Frecuencia de revisión de la autorización de teletrabajo.",
+          "evidence": [
+            {
+              "document": "politica-teletrabajo.md",
+              "quote": "La autorización se revisa cada seis meses y puede retirarse con un preaviso de quince días."
+            }
+          ],
+          "key_facts": ["seis meses"]
+        },
+        {
+          "reading": "Frecuencia de revisión de las acciones de mejora de los incidentes.",
+          "evidence": [
+            {
+              "document": "guia-incidentes.md",
+              "quote": "Las acciones se registran en el tablero de fiabilidad y se revisan cada mes."
+            }
+          ],
+          "key_facts": ["cada mes"]
+        }
+      ]
+    },
+    {
+      "id": "a004",
+      "kind": "ambiguous",
+      "question": "¿Qué pasa si no respondo a tiempo?",
+      "rationale": "Puede referirse a una alerta de guardia o a la presentación de un gasto fuera de plazo.",
+      "interpretations": [
+        {
+          "reading": "Una alerta de nivel 1 sin respuesta de la persona de guardia.",
+          "evidence": [
+            {
+              "document": "guia-incidentes.md",
+              "quote": "Si la persona de guardia no responde a una alerta de nivel 1 en el plazo indicado, el sistema avisa automáticamente a la persona de guardia secundaria."
+            }
+          ],
+          "key_facts": ["guardia secundaria"]
+        },
+        {
+          "reading": "Un gasto presentado fuera de plazo.",
+          "evidence": [
+            {
+              "document": "guia-gastos.md",
+              "quote": "Los gastos presentados fuera de plazo no se reembolsan salvo causa justificada."
+            }
+          ],
+          "key_facts": ["no se reembolsan"]
+        }
+      ]
+    },
+    {
+      "id": "a005",
+      "kind": "ambiguous",
+      "question": "¿Puedo usar mi móvil personal?",
+      "rationale": "La respuesta depende del uso: correo y calendario sí, VPN no.",
+      "interpretations": [
+        {
+          "reading": "Acceso al correo y al calendario desde un dispositivo personal.",
+          "evidence": [
+            {
+              "document": "normas-seguridad.md",
+              "quote": "Los dispositivos personales solo pueden acceder al correo y al calendario mediante la aplicación gestionada de la empresa."
+            }
+          ],
+          "key_facts": ["aplicación gestionada"]
+        },
+        {
+          "reading": "Instalación del cliente de la VPN en un móvil personal.",
+          "evidence": [
+            {
+              "document": "normas-seguridad.md",
+              "quote": "No está permitido instalar el cliente de la VPN en un móvil personal."
+            }
+          ],
+          "key_facts": ["no está permitido"]
+        }
+      ]
+    },
+    {
+      "id": "a006",
+      "kind": "ambiguous",
+      "question": "¿Quién aprueba el gasto?",
+      "rationale": "Depende de la naturaleza del gasto: representación o superación del límite.",
+      "interpretations": [
+        {
+          "reading": "Aprobación de un gasto de representación.",
+          "evidence": [
+            {
+              "document": "guia-gastos.md",
+              "quote": "Los gastos de representación, como invitar a un cliente a comer, requieren la autorización previa de la dirección de área."
+            }
+          ],
+          "key_facts": ["dirección de área"]
+        },
+        {
+          "reading": "Aprobación de un gasto que supera el límite.",
+          "evidence": [
+            {
+              "document": "guia-gastos.md",
+              "quote": "Cualquier gasto por encima del límite exige la aprobación escrita de la dirección financiera."
+            }
+          ],
+          "key_facts": ["dirección financiera"]
+        }
+      ]
+    },
+    {
+      "id": "u001",
+      "kind": "unanswerable",
+      "question": "¿Cuántos días de vacaciones tiene al año una persona empleada?",
+      "rationale": "Ningún documento trata las vacaciones."
+    },
+    {
+      "id": "u002",
+      "kind": "unanswerable",
+      "question": "¿Cuál es el salario base de un técnico de sistemas?",
+      "rationale": "No hay información salarial en el corpus."
+    },
+    {
+      "id": "u003",
+      "kind": "unanswerable",
+      "question": "¿Cuánto se reembolsa por kilómetro si viajo con mi coche particular?",
+      "rationale": "La guía de gastos no regula el kilometraje, aunque trate temas cercanos."
+    },
+    {
+      "id": "u004",
+      "kind": "unanswerable",
+      "question": "¿Qué proveedor de nube se usa en producción?",
+      "rationale": "La guía de incidentes habla de producción pero no del proveedor de infraestructura."
+    },
+    {
+      "id": "u005",
+      "kind": "unanswerable",
+      "question": "¿Cuántos días de teletrabajo tenían las personas empleadas en 2019?",
+      "rationale": "El corpus solo describe la política vigente, sin histórico."
+    },
+    {
+      "id": "u006",
+      "kind": "unanswerable",
+      "question": "¿Cuál es la capital de Australia?",
+      "rationale": "Pregunta ajena al dominio del corpus."
+    }
+  ]
+}
