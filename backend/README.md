@@ -104,6 +104,26 @@ All endpoints require a session (`401 unauthorized` otherwise) and only ever see
   against `Content-Length`). A rejected upload leaves no database row and no file; if saving the row
   fails, the stored file is removed. The filename is sanitized metadata only.
 
+### Ingestion worker
+
+Uploading never waits for processing: the API only stores the file and leaves the document
+`UPLOADED`. A separate process does the work:
+
+```bash
+uv run python -m app.ingestion.worker   # from backend/; run as many as you like
+```
+
+- The `documents` table is the queue. A worker claims the oldest pending document with
+  `FOR UPDATE SKIP LOCKED` (workers never collide), marks it `PROCESSING` with a lease
+  (`INGESTION_LEASE_SECONDS`) and commits the claim before doing any work.
+- If a worker dies mid-document nobody renews the lease; once it expires another worker takes the
+  document over and retries it. After `INGESTION_MAX_ATTEMPTS` attempts it ends `FAILED` with a
+  readable cause instead of looping forever.
+- A document that cannot be processed (no text, corrupt, encrypted) ends `FAILED` with its cause; an
+  unexpected error puts it back to `UPLOADED` for another try (or `FAILED` once attempts run out).
+- `SIGINT`/`SIGTERM` finish the current document and exit. When the queue is empty the worker sleeps
+  `INGESTION_POLL_SECONDS`.
+
 ### Text extraction
 
 `app/features/documents/extraction.py` turns a stored original into `ExtractedBlock`s, each carrying its
