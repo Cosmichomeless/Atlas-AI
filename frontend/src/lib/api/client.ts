@@ -1,6 +1,7 @@
 import createClient from "openapi-fetch";
 
-import { createCsrfMiddleware } from "./csrf";
+import { createCsrfMiddleware, createCsrfStore } from "./csrf";
+import type { CsrfStore } from "./csrf";
 import { ApiError, toApiError } from "./errors";
 import type { paths } from "./schema";
 
@@ -10,16 +11,19 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://loca
  * Cliente tipado generado a partir del contrato OpenAPI del backend (`npm run api:types`).
  * Las rutas, parámetros y respuestas se validan en compilación; no hay lógica de negocio aquí.
  */
-export function createApiClient(options: { baseUrl?: string; fetch?: typeof fetch } = {}) {
+export function createApiClient(options: { baseUrl?: string; fetch?: typeof fetch; csrf?: CsrfStore } = {}) {
   const baseUrl = options.baseUrl ?? API_BASE_URL;
   // `fetch` se resuelve en cada llamada (no al crear el cliente) para poder sustituirlo en tests.
   const fetchImpl = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
   const client = createClient<paths>({ baseUrl, credentials: "include", fetch: fetchImpl });
-  client.use(createCsrfMiddleware({ baseUrl, fetch: fetchImpl }));
+  client.use(createCsrfMiddleware(options.csrf ?? createCsrfStore({ baseUrl, fetch: fetchImpl })));
   return client;
 }
 
-export const api = createApiClient();
+/** Token CSRF compartido por `api` y por las subidas con progreso (que no pasan por `fetch`). */
+export const csrf = createCsrfStore({ baseUrl: API_BASE_URL });
+
+export const api = createApiClient({ csrf });
 
 type ApiResult<T> = { data?: T; error?: unknown; response: Response };
 
