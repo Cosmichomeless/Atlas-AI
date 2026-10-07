@@ -104,14 +104,18 @@ describe("CitationSource", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("no pide el pasaje dos veces con pulsaciones seguidas", async () => {
-    const { calls } = mockApi({ [PATH]: () => jsonResponse(200, PASSAGE) });
+  it("no pide el pasaje dos veces mientras está cargando", async () => {
+    let release: (response: Response) => void = () => {};
+    const { calls } = mockApi({ [PATH]: () => new Promise<Response>((resolve) => (release = resolve)) });
     render(<CitationSource citation={CITATION} />);
-    const button = screen.getByRole("button");
     const user = userEvent.setup();
 
-    await user.dblClick(button);
-    await screen.findByRole("figure");
+    await user.click(screen.getByRole("button"));
+    expect(await screen.findByText("Cargando pasaje…")).toBeInTheDocument();
+    await user.click(screen.getByRole("button"));
     expect(calls.filter((call) => call.path.includes("/chunks/"))).toHaveLength(1);
+
+    release(jsonResponse(200, PASSAGE));
+    expect(await screen.findByRole("figure")).toBeInTheDocument();
   });
 });
