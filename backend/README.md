@@ -439,6 +439,27 @@ A provider failure is **not** an abstention: `LLMError` propagates untouched so 
 model said on an abstention is kept in `Abstained.answer` for diagnosis only and is never delivered.
 Abstentions are logged on `app.answers` with the reason and chunk count, never the question.
 
+### Question endpoint
+
+`POST /api/v1/questions` (authenticated, CSRF-protected) answers a question from the caller's
+documents. Body: `{"question": "...", "document_ids": [...]}` (`document_ids` optional; omitted =
+all of the caller's documents). Only `READY` documents owned by the caller are consulted; foreign,
+unknown or not-ready ids contribute nothing, exactly as in `/search`.
+
+The response always has the same shape:
+
+- `status`: `answered` or `abstained`.
+- `text`: the answer with `[S1]`-style labels, or `null` on abstention (the model's text is never
+  delivered when abstaining).
+- `abstention_reason`: `no_relevant_chunks`, `insufficient_evidence` or `no_valid_citations`.
+- `citations`: verified sources only (document, filename, chunk, page, section, lines).
+- `uncited_statements`: sentences with neither a source nor the external-knowledge marker.
+- `documents`: the documents the consulted fragments came from.
+- `provenance`: prompt version/fingerprint and model (`null` if the model was never called).
+
+Errors: `422` invalid question or scope, `409 index_incompatible`, `503 embedding_unavailable` and
+`503 llm_unavailable`. An abstention is a `200`; a provider failure never is.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference

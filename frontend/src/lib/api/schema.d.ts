@@ -209,14 +209,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preguntar a mis documentos
+         * @description Responde con fragmentos de mis documentos listos (READY) y cita sus fuentes.
+         *
+         *     Sin evidencia suficiente responde 200 con `status: "abstained"` y sin texto; un fallo del
+         *     proveedor de lenguaje es un 503 `llm_unavailable`, que no es lo mismo que abstenerse.
+         */
+        post: operations["ask_question_api_v1_questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AnswerProvenance
+         * @description Con qué prompt y modelo se generó la respuesta.
+         */
+        AnswerProvenance: {
+            /** Prompt Version */
+            prompt_version: string;
+            /** Prompt Fingerprint */
+            prompt_fingerprint: string;
+            /**
+             * Llm
+             * @description Proveedor, modelo y versión, p. ej. «openai/gpt-x/v1».
+             */
+            llm: string;
+            /** Temperature */
+            temperature: number;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+        };
         /** Body_upload_document_api_v1_documents_post */
         Body_upload_document_api_v1_documents_post: {
             /** File */
             file: string;
+        };
+        /** ConsultedDocument */
+        ConsultedDocument: {
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Filename */
+            filename: string;
         };
         /** CsrfToken */
         CsrfToken: {
@@ -378,6 +430,96 @@ export interface components {
              * Format: password
              */
             password: string;
+        };
+        /**
+         * QuestionCitation
+         * @description Fuente verificada de la respuesta: documento y ubicación exacta del fragmento.
+         */
+        QuestionCitation: {
+            /**
+             * Label
+             * @description Etiqueta que aparece en el texto, p. ej. «S1» en «[S1]».
+             */
+            label: string;
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Chunk Id
+             * Format: uuid
+             */
+            chunk_id: string;
+            /**
+             * Ordinal
+             * @description Posición del fragmento dentro del documento.
+             */
+            ordinal: number;
+            /** Page */
+            page: number | null;
+            /** Section */
+            section: string | null;
+            /** Start Line */
+            start_line: number | null;
+            /** End Line */
+            end_line: number | null;
+        };
+        /** QuestionRequest */
+        QuestionRequest: {
+            /**
+             * Question
+             * @description Pregunta en lenguaje natural.
+             */
+            question: string;
+            /**
+             * Document Ids
+             * @description Limita la respuesta a estos documentos. Omitido = todos los míos listos (READY); ajenos, inexistentes o no listos no aportan fuentes.
+             */
+            document_ids?: string[] | null;
+        };
+        /** QuestionResponse */
+        QuestionResponse: {
+            /**
+             * Status
+             * @description «abstained»: no hay evidencia suficiente y no se entrega respuesta.
+             * @enum {string}
+             */
+            status: "answered" | "abstained";
+            /**
+             * Text
+             * @description Respuesta con etiquetas de cita; nula si se abstiene.
+             */
+            text: string | null;
+            /**
+             * Abstention Reason
+             * @description Por qué no se responde; nulo si hay respuesta.
+             */
+            abstention_reason: ("no_relevant_chunks" | "insufficient_evidence" | "no_valid_citations") | null;
+            /**
+             * Citations
+             * @description Solo citas verificadas.
+             */
+            citations: components["schemas"]["QuestionCitation"][];
+            /**
+             * Uncited Statements
+             * @description Frases de la respuesta sin fuente ni marca de ajenas a los documentos.
+             */
+            uncited_statements: string[];
+            /**
+             * Documents
+             * @description Documentos de los que salieron los fragmentos consultados.
+             */
+            documents: components["schemas"]["ConsultedDocument"][];
+            /**
+             * Truncated
+             * @description La respuesta se cortó por el límite de salida del modelo.
+             */
+            truncated: boolean;
+            /** @description Nulo si no se llegó a consultar al modelo. */
+            provenance: components["schemas"]["AnswerProvenance"] | null;
         };
         /** RegisterRequest */
         RegisterRequest: {
@@ -1175,6 +1317,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Autenticación requerida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tienes permiso para realizar esta acción. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La solicitud entra en conflicto con el estado actual del recurso. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Los datos enviados no son válidos. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error interno del servidor. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Servicio no disponible. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ask_question_api_v1_questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionResponse"];
                 };
             };
             /** @description Autenticación requerida. */
