@@ -1,26 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PAGE_SIZE, listDocuments } from "@/lib/api/documents";
 import type { DocumentList } from "@/lib/api/documents";
 import { describeError } from "@/lib/api/messages";
-import { STATUS_LABEL } from "@/lib/documents/status";
-import { formatSize } from "@/lib/documents/validation";
+import { isPending } from "@/lib/documents/status";
 
 import styles from "./document-library.module.css";
+import { DocumentRow } from "./document-row";
 import { UploadForm } from "./upload-form";
 
-const dateFormat = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" });
+/** Cada cuánto se refresca la lista mientras haya documentos por terminar de procesar. */
+export const POLL_INTERVAL_MS = 3000;
 
 export function DocumentLibrary() {
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<DocumentList | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Solo cuenta la última petición lanzada: una respuesta antigua no pisa a una más reciente.
+  const latest = useRef(0);
+  const offsetRef = useRef(0);
 
-  const load = useCallback(async (target: number) => {
-    setLoading(true);
+  const load = useCallback(async (target: number, options: { silent?: boolean } = {}) => {
+    const id = ++latest.current;
+    if (!options.silent) setLoading(true);
     try {
       let next = await listDocuments(target);
       // Si se borró lo último de la última página, se retrocede a la última que exista.
@@ -28,13 +33,18 @@ export function DocumentLibrary() {
         target = Math.max(0, (Math.ceil(next.total / PAGE_SIZE) - 1) * PAGE_SIZE);
         next = await listDocuments(target);
       }
+      if (id !== latest.current) return;
+      offsetRef.current = target;
       setOffset(target);
       setPage(next);
       setError(null);
     } catch (caught) {
-      setError(describeError(caught, "No se pudieron cargar tus documentos."));
+      // Un refresco en segundo plano que falla no tapa la lista con un error: se reintenta solo.
+      if (id === latest.current && !options.silent) {
+        setError(describeError(caught, "No se pudieron cargar tus documentos."));
+      }
     } finally {
-      setLoading(false);
+      if (id === latest.current) setLoading(false);
     }
   }, []);
 
@@ -42,6 +52,32 @@ export function DocumentLibrary() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial desde la API
     void load(0);
   }, [load]);
+
+  // Mientras algún documento esté en cola o procesándose se vuelve a consultar; al llegar todos a
+  // READY/FAILED `pending` pasa a false y el temporizador se cancela.
+  const pending = page?.items.some((document) => isPending(document.status)) ?? false;
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setInterval(() => {
+      if (!globalThis.document?.hidden) void load(offsetRef.current, { silent: true });
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [pending, load]);
+
+  // El documento desaparece al instante; la recarga posterior concilia paginación y total.
+  const removed = useCallback(
+    (id: string) => {
+      setPage((current) =>
+        current && {
+          ...current,
+          items: current.items.filter((document) => document.id !== id),
+          total: Math.max(0, current.total - 1),
+        },
+      );
+      void load(offsetRef.current, { silent: true });
+    },
+    [load],
+  );
 
   const total = page?.total ?? 0;
   const first = total === 0 ? 0 : offset + 1;
@@ -72,17 +108,7 @@ export function DocumentLibrary() {
         <>
           <ul className={styles.list} aria-busy={loading}>
             {page.items.map((document) => (
-              <li key={document.id} className={styles.item}>
-                <div>
-                  <p className={styles.name}>{document.filename}</p>
-                  <p className={styles.meta}>
-                    {formatSize(document.size_bytes)} · {dateFormat.format(new Date(document.created_at))}
-                  </p>
-                </div>
-                <span className={styles.status} data-status={document.status}>
-                  {STATUS_LABEL[document.status]}
-                </span>
-              </li>
+              <DocumentRow key={document.id} document={document} onDeleted={removed} />
             ))}
           </ul>
 
