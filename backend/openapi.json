@@ -875,10 +875,137 @@
           }
         }
       }
+    },
+    "/api/v1/questions": {
+      "post": {
+        "tags": [
+          "questions"
+        ],
+        "summary": "Preguntar a mis documentos",
+        "description": "Responde con fragmentos de mis documentos listos (READY) y cita sus fuentes.\n\nSin evidencia suficiente responde 200 con `status: \"abstained\"` y sin texto; un fallo del\nproveedor de lenguaje es un 503 `llm_unavailable`, que no es lo mismo que abstenerse.",
+        "operationId": "ask_question_api_v1_questions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tienes permiso para realizar esta acción.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Los datos enviados no son válidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autenticación requerida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La solicitud entra en conflicto con el estado actual del recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AnswerProvenance": {
+        "properties": {
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "prompt_fingerprint": {
+            "type": "string",
+            "title": "Prompt Fingerprint"
+          },
+          "llm": {
+            "type": "string",
+            "title": "Llm",
+            "description": "Proveedor, modelo y versión, p. ej. «openai/gpt-x/v1»."
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "title": "Max Output Tokens"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompt_version",
+          "prompt_fingerprint",
+          "llm",
+          "temperature",
+          "max_output_tokens"
+        ],
+        "title": "AnswerProvenance",
+        "description": "Con qué prompt y modelo se generó la respuesta."
+      },
       "Body_upload_document_api_v1_documents_post": {
         "properties": {
           "file": {
@@ -892,6 +1019,25 @@
           "file"
         ],
         "title": "Body_upload_document_api_v1_documents_post"
+      },
+      "ConsultedDocument": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "filename"
+        ],
+        "title": "ConsultedDocument"
       },
       "CsrfToken": {
         "properties": {
@@ -1232,6 +1378,218 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "QuestionCitation": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Etiqueta que aparece en el texto, p. ej. «S1» en «[S1]»."
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "chunk_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Chunk Id"
+          },
+          "ordinal": {
+            "type": "integer",
+            "title": "Ordinal",
+            "description": "Posición del fragmento dentro del documento."
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "start_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Line"
+          },
+          "end_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Line"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "document_id",
+          "filename",
+          "chunk_id",
+          "ordinal",
+          "page",
+          "section",
+          "start_line",
+          "end_line"
+        ],
+        "title": "QuestionCitation",
+        "description": "Fuente verificada de la respuesta: documento y ubicación exacta del fragmento."
+      },
+      "QuestionRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Question",
+            "description": "Pregunta en lenguaje natural."
+          },
+          "document_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "maxItems": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Ids",
+            "description": "Limita la respuesta a estos documentos. Omitido = todos los míos listos (READY); ajenos, inexistentes o no listos no aportan fuentes."
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "QuestionRequest"
+      },
+      "QuestionResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "answered",
+              "abstained"
+            ],
+            "title": "Status",
+            "description": "«abstained»: no hay evidencia suficiente y no se entrega respuesta."
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "Respuesta con etiquetas de cita; nula si se abstiene."
+          },
+          "abstention_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no_relevant_chunks",
+                  "insufficient_evidence",
+                  "no_valid_citations"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abstention Reason",
+            "description": "Por qué no se responde; nulo si hay respuesta."
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionCitation"
+            },
+            "type": "array",
+            "title": "Citations",
+            "description": "Solo citas verificadas."
+          },
+          "uncited_statements": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Uncited Statements",
+            "description": "Frases de la respuesta sin fuente ni marca de ajenas a los documentos."
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/ConsultedDocument"
+            },
+            "type": "array",
+            "title": "Documents",
+            "description": "Documentos de los que salieron los fragmentos consultados."
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "La respuesta se cortó por el límite de salida del modelo."
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnswerProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nulo si no se llegó a consultar al modelo."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "text",
+          "abstention_reason",
+          "citations",
+          "uncited_statements",
+          "documents",
+          "truncated",
+          "provenance"
+        ],
+        "title": "QuestionResponse"
       },
       "RegisterRequest": {
         "properties": {
