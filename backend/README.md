@@ -329,6 +329,23 @@ section, start_line, end_line}`. Snippets are one line, at most 280 characters, 
   built with another embedding model: reindex), `503 embedding_unavailable` (provider failure; provider
   details are never exposed).
 
+### Retrieval evaluation
+
+`tests/test_retrieval_eval.py` checks retrieval end to end against a real Postgres: a small, known corpus
+(a text manual, a Markdown file with sections, a PDF with pages) owned by three users is uploaded through
+the API, processed by the ingestion worker and queried through `POST /api/v1/search`.
+
+- **Similarity.** Sample questions each have an expected source; the suite requires it in the top 3 for
+  every question (hit rate 1.0) and a mean reciprocal rank of at least 0.8. Scores are ordered, within
+  [0, 1], and the same question always returns the same answer. The test embedder is a bag of words, so
+  these numbers guard against regressions; they do not describe a real model's quality.
+- **Provenance.** Results cite the PDF page, the Markdown section path and the text line range that contain
+  the answer, and the cited chunk is the stored one (id, ordinal, page, section, lines).
+- **Owner filter.** Every result of every user and question belongs to the asker, another user's better
+  match never takes a slot (the filter runs before `k`), selecting foreign documents returns nothing, and
+  the SQL actually sent to Postgres is captured to prove it filters by the user's id. Removing the
+  `owner_id` condition from the query turns ten of these tests red.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
