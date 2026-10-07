@@ -460,6 +460,26 @@ The response always has the same shape:
 Errors: `422` invalid question or scope, `409 index_incompatible`, `503 embedding_unavailable` and
 `503 llm_unavailable`. An abstention is a `200`; a provider failure never is.
 
+### Citation and abstention integrity tests
+
+`tests/test_answer_integrity.py` exercises the whole path (real PDF upload → ingestion → `POST
+/api/v1/questions`) with a scripted `FakeLLMProvider`, so the contract is checked independently of
+any real model. `assert_integrity` states the invariants every response must satisfy:
+
+- an abstention has no text, no citations and a reason;
+- a delivered answer has at least one citation, every `[Sn]` in its text is backed by a verified
+  citation, and each citation points to an existing chunk of a `READY` document of the caller, at
+  the page/ordinal it claims;
+- nothing from another user's documents reaches the model or the response.
+
+Scenarios cover nonexistent labels, sources deleted, moved or re-queued while the model answers,
+questions with no documents or below the relevance threshold (the model is never called), a model
+that declares `SIN_EVIDENCIA`, and a matrix of malformed or hostile model outputs. Mutating
+`verify_citations` or the abstention check makes the suite fail.
+
+Known limit: sentences the model writes without a source are still delivered when the answer has
+at least one valid citation, but they are always listed in `uncited_statements`.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
