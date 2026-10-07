@@ -289,6 +289,25 @@ indistinguishable: they match nothing and raise no error, so a document's existe
 empty selection searches nothing (it never means "all"); duplicates count once; more than
 `SEARCH_MAX_DOCUMENTS` ids raises `InvalidSearchError` (`too_many_documents`).
 
+**Redundancy.** Neighbouring chunks overlap and a document can repeat boilerplate, so the raw top-`k` may be
+filled with near copies of one passage. `app/retrieval/dedup.py` reduces them after the query, with a
+deterministic policy (`DedupPolicy`) applied in ranking order: a hit is dropped when a better-ranked hit
+already kept from the **same document** either has the same normalized text (`exact`, wherever it is) or is
+at most `SEARCH_DEDUP_WINDOW` ordinals away and shares at least `SEARCH_DEDUP_OVERLAP` of the shorter
+text's 3-word sequences (`contiguous`). The best-ranked chunk always survives, the same text in different
+documents is never merged (they are different sources), and applying the policy twice changes nothing.
+To keep `k` results after dropping, the query asks for `k * SEARCH_OVERFETCH` candidates and the list is cut
+back to `k`. `search_with_report` returns the kept hits plus a `Reduction` (what was dropped, why, with
+which overlap, and `redundancy_rate`) so the policy can be measured in an evaluation. With the default
+chunking (size 1000, overlap 150) neighbours share about 15 %, below the 0.5 threshold, so only
+near-identical chunks are dropped.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `SEARCH_DEDUP_OVERLAP` | 0.5 (0 to 1] | Share of repeated word sequences that makes a contiguous chunk redundant |
+| `SEARCH_DEDUP_WINDOW` | 1 | How many ordinals away counts as contiguous (0 = only exact repeats) |
+| `SEARCH_OVERFETCH` | 3 | Candidates fetched per result wanted, to refill the list after reduction |
+
 ### Search endpoint
 
 `POST /api/v1/search` (session cookie + CSRF) returns the fragments of the caller's documents that best match

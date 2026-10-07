@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.embeddings.models import VECTOR_DIMENSIONS
 from app.embeddings.provider import Embedding
+from app.retrieval.dedup import DedupPolicy
 from app.retrieval.question import PreparedQuestion, prepare_question
 from app.retrieval.search import InvalidSearchError, SearchLimits, search_chunks
 from tests.test_embedding_store import PROVIDER, index_document, other_spec
@@ -154,7 +155,9 @@ def test_limits_come_from_the_settings() -> None:
         search_min_score=0.25,
     )
 
-    assert SearchLimits.from_settings(settings) == SearchLimits(2, 7, 0.25, 50)
+    assert SearchLimits.from_settings(settings) == SearchLimits(
+        2, 7, 0.25, 50, DedupPolicy(0.5, 1, 3)
+    )
 
 
 def test_a_default_k_above_the_maximum_is_a_configuration_error() -> None:
