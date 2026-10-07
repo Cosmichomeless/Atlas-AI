@@ -460,6 +460,43 @@ sentence and says `SIN_EVIDENCIA` when overlap is below 0.5 (threshold fixed up 
 - **Limits.** With fake providers the numbers detect pipeline regressions and say nothing about a real
   model. One annotator and a small dataset: differences of one or two questions are noise.
 
+### Comparing configurations
+
+`uv run python -m app.evaluation.compare` runs the baseline (no reranking) and the same configuration with
+reranking over the same dataset and compares quality, latency and cost. Options: `--dataset`,
+`--rerank-weight`, `--repeats` (default 5), `--max-overhead-ms` (default 20), `--no-timing`, `--output
+report.json` and `--markdown report.md`. The corpus is indexed once and both arms query that index, so any
+difference comes from the configuration, not from the indexing; configurations that would need another index
+(different embedder or chunking) are rejected.
+
+- **Quality.** Every retrieval and answer metric with baseline, candidate, delta and whether it moved in
+  the good direction (for `hallucination_rate` and `unnecessary_abstention_rate` lower is better). Because
+  the dataset is small, the report also lists the questions whose recall, reciprocal rank or verdict change:
+  read those before trusting an average.
+- **Latency.** Each arm is repeated (`--repeats`, plus a discarded warm-up pass) alternating the order, and
+  reports mean, p50 and p95 for retrieval and end to end. Timings vary from run to run, so they live under
+  `timing` and `--no-timing` gives a byte-for-byte reproducible report.
+- **Cost.** Answer input and output tokens per arm and the extra model calls the reranker makes per question
+  (0 for `lexical`: it is a pure function of the text).
+- **Decision rule, fixed beforehand and written in the report.** Keep the variant only if recall, MRR, correct
+  rate and hallucination rate do not get worse, at least one of them improves, and the p95 retrieval overhead
+  stays under `--max-overhead-ms`. Regressions in metrics outside the rule (e.g. citation precision) do not
+  decide, but are listed next to the decision.
+
+The result for the default settings is versioned in `evaluation/results/` (`rerank-comparison.json`,
+reproducible; `rerank-comparison.md`, readable, with the latency of the run that produced it). Regenerate it
+against a throwaway database:
+
+```bash
+DATABASE_URL=... uv run python -m app.evaluation.compare --no-timing --output evaluation/results/rerank-comparison.json
+DATABASE_URL=... uv run python -m app.evaluation.compare --repeats 10 --output /tmp/timed.json --markdown evaluation/results/rerank-comparison.md
+```
+
+**Limit.** The committed result uses the fake providers: the vector score is noise there, so reranking looks
+better than it would on top of a real embedding model, and the extractive responder makes faithfulness
+trivially 1.0. It shows that the procedure works and what the rule decides with those inputs; repeat it with
+`EMBEDDING_PROVIDER=openai` and `LLM_PROVIDER=openai` before deciding anything for production.
+
 ### Bounded context
 
 `app/answers/context.py` turns the retrieved chunks into the context sent to the model, within an explicit
