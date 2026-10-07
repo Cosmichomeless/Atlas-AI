@@ -1,6 +1,7 @@
 """Qué afirma una respuesta y en qué se apoya: etiquetas de fuente por afirmación."""
 
 import re
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Literal
 
@@ -24,6 +25,23 @@ def extract_labels(text: str) -> tuple[str, ...]:
             if label not in found:
                 found.append(label)
     return tuple(found)
+
+
+def strip_labels(text: str, invalid: Collection[str]) -> str:
+    """Quita de `text` las etiquetas de `invalid`: una cita inventada no debe verse como válida.
+
+    `[S1, S9]` queda como `[S1]`; un marcador que se queda sin etiquetas desaparece entero.
+    """
+    bad = set(invalid)
+
+    def rewrite(match: re.Match[str]) -> str:
+        labels = _LABEL.findall(match.group(0))
+        keep = [label for label in labels if label not in bad]
+        if len(keep) == len(labels):
+            return match.group(0)
+        return f" [{', '.join(keep)}]" if keep else ""
+
+    return re.sub(r"\s*" + _CITATION.pattern, rewrite, text).strip()
 
 
 @dataclass(frozen=True, slots=True)

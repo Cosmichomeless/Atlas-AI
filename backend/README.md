@@ -408,6 +408,20 @@ context. An empty context never reaches the model (`EmptyContextError`); a provi
   text). A test pins the fingerprint of every published version: editing the prompt without bumping the version
   fails the build.
 
+### Citation verification
+
+`verify_citations(session, answer, owner_id=...)` (`app/answers/citations.py`) checks every `[Sn]` label the model
+used before anything is delivered:
+
+- The label must exist in the context that was sent (`unknown_label` otherwise: the model made it up).
+- Its chunk must still exist in the database, belong to a `READY` document of `owner_id` (`chunk_missing`) and
+  keep the same document, ordinal, page, section and lines it had when retrieved (`source_changed`), so a
+  document that was deleted, reprocessed or is someone else's can never be cited.
+- Valid ones become `Citation`s (label, `chunk_id`, `document_id`, filename, ordinal, page, section, lines).
+  Rejected ones are listed in `rejected` with their reason and **removed from the delivered text**
+  (`[S1, S9]` → `[S1]`); `raw_text` keeps what the model wrote. Statements are recomputed on the cleaned text,
+  so a claim backed only by an invented label becomes `uncited`.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
