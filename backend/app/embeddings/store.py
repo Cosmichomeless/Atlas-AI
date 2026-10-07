@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.embeddings.models import VECTOR_DIMENSIONS, ChunkEmbedding
 from app.embeddings.provider import Embedding, EmbeddingError, EmbeddingSpec
 from app.features.documents.models import Document, DocumentChunk
+from app.features.documents.states import DocumentStatus
 
 
 class IncompatibleDimensionsError(EmbeddingError):
@@ -92,6 +93,7 @@ def nearest_chunks(
     limit: int = 5,
     max_distance: float | None = None,
     document_ids: Collection[uuid.UUID] | None = None,
+    status: DocumentStatus | None = None,
 ) -> list[SimilarChunk]:
     """Fragmentos del propietario más parecidos a `query`, solo entre vectores de su misma spec.
 
@@ -100,6 +102,8 @@ def nearest_chunks(
     `document_ids` restringe la búsqueda a esos documentos —también dentro de la consulta, para que
     el límite se aplique ya filtrado—; los que no son del propietario simplemente no coinciden, sin
     distinguirse de los inexistentes. Una colección vacía no busca en ningún documento.
+    `status` restringe a documentos en ese estado: un documento READY que se reindexa vuelve a
+    UPLOADED conservando sus vectores antiguos, y esos no deben servirse como fuente.
     """
     ensure_fits_schema(query.spec)
     distance = ChunkEmbedding.embedding.cosine_distance(list(query.vector))
@@ -115,5 +119,7 @@ def nearest_chunks(
         statement = statement.where(distance <= max_distance)
     if document_ids is not None:
         statement = statement.where(DocumentChunk.document_id.in_(document_ids))
+    if status is not None:
+        statement = statement.where(Document.status == status)
     rows = session.execute(statement).all()
     return [SimilarChunk(chunk, document, float(dist)) for chunk, document, dist in rows]

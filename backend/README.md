@@ -289,6 +289,27 @@ indistinguishable: they match nothing and raise no error, so a document's existe
 empty selection searches nothing (it never means "all"); duplicates count once; more than
 `SEARCH_MAX_DOCUMENTS` ids raises `InvalidSearchError` (`too_many_documents`).
 
+### Search endpoint
+
+`POST /api/v1/search` (session cookie + CSRF) returns the fragments of the caller's documents that best match
+a question, each with a short snippet, a score and where it comes from.
+
+```json
+{"question": "¿cuándo vence la factura?", "k": 5, "min_score": 0.2, "document_ids": ["<uuid>"]}
+```
+
+Only `question` is required. The response is `{results, k, min_score}` (the limits actually applied);
+each result is `{snippet, score, source}` and `source` is `{document_id, filename, chunk_id, ordinal, page,
+section, start_line, end_line}`. Snippets are one line, at most 280 characters, cut on a word boundary.
+
+- Only the caller's documents in `READY` are searched. A document being reindexed goes back to `UPLOADED`
+  keeping its old vectors, and those are not served until it is `READY` again.
+- Foreign and unknown ids in `document_ids` are indistinguishable (200 with no results).
+- Errors use the common format: `422` (`question_empty`, `question_too_long`, `invalid_k`,
+  `invalid_min_score`, `too_many_documents`, `validation_error`), `409 index_incompatible` (the index was
+  built with another embedding model: reindex), `503 embedding_unavailable` (provider failure; provider
+  details are never exposed).
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference

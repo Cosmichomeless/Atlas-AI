@@ -783,6 +783,98 @@
           }
         }
       }
+    },
+    "/api/v1/search": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Buscar fragmentos relevantes",
+        "description": "Fragmentos de mis documentos listos (READY) más parecidos a la pregunta, con su origen.",
+        "operationId": "search_api_v1_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tienes permiso para realizar esta acción.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Los datos enviados no son válidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autenticación requerida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La solicitud entra en conflicto con el estado actual del recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1164,6 +1256,194 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "SearchRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Question",
+            "description": "Pregunta en lenguaje natural."
+          },
+          "k": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "K",
+            "description": "Máximo de resultados (por defecto SEARCH_*)."
+          },
+          "min_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Score",
+            "description": "Similitud coseno mínima, de 0 a 1 (por defecto SEARCH_*)."
+          },
+          "document_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "maxItems": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Ids",
+            "description": "Limita la búsqueda a estos documentos. Omitido = todos los míos listos; ajenos o inexistentes no aportan resultados."
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "SearchRequest"
+      },
+      "SearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K",
+            "description": "Máximo de resultados aplicado."
+          },
+          "min_score": {
+            "type": "number",
+            "title": "Min Score",
+            "description": "Umbral de similitud aplicado."
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "k",
+          "min_score"
+        ],
+        "title": "SearchResponse"
+      },
+      "SearchResult": {
+        "properties": {
+          "snippet": {
+            "type": "string",
+            "title": "Snippet",
+            "description": "Texto breve del fragmento, acortado si es largo."
+          },
+          "score": {
+            "type": "number",
+            "title": "Score",
+            "description": "Similitud coseno en [-1, 1]; 1 = misma dirección."
+          },
+          "source": {
+            "$ref": "#/components/schemas/SearchSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snippet",
+          "score",
+          "source"
+        ],
+        "title": "SearchResult"
+      },
+      "SearchSource": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "chunk_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Chunk Id"
+          },
+          "ordinal": {
+            "type": "integer",
+            "title": "Ordinal",
+            "description": "Posición del fragmento dentro del documento."
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "start_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Line"
+          },
+          "end_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Line"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "filename",
+          "chunk_id",
+          "ordinal",
+          "page",
+          "section",
+          "start_line",
+          "end_line"
+        ],
+        "title": "SearchSource",
+        "description": "Dónde está el fragmento: lo necesario para citarlo y abrir el original."
       },
       "UserPublic": {
         "properties": {

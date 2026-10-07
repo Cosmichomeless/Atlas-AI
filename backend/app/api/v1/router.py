@@ -5,6 +5,7 @@ from app.api.errors import error_responses
 from app.features.auth.router import router as auth_router
 from app.features.documents.router import router as documents_router
 from app.features.health.router import router as health_router
+from app.features.search.router import router as search_router
 
 API_V1_PREFIX = "/api/v1"
 
@@ -18,3 +19,4 @@ api_router = APIRouter(
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
 api_router.include_router(documents_router)
+api_router.include_router(search_router)

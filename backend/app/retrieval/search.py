@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.embeddings.store import SimilarChunk, nearest_chunks
+from app.features.documents.states import DocumentStatus
 from app.retrieval.question import PreparedQuestion
 
 
@@ -72,12 +73,14 @@ def search_chunks(
     k: int | None = None,
     min_score: float | None = None,
     document_ids: Collection[uuid.UUID] | None = None,
+    status: DocumentStatus | None = None,
 ) -> list[SimilarChunk]:
     """Hasta `k` fragmentos del usuario con similitud >= `min_score`, de más a menos parecido.
 
     Solo busca entre los documentos de `owner_id`; con `document_ids` además se limita a esa
     selección. Un identificador ajeno o inexistente no da error ni se distingue del otro: no aporta
     resultados. Una selección vacía no busca en ningún documento (nunca equivale a "todos").
+    `status` limita la búsqueda a documentos en ese estado (la API pasa READY).
 
     Los empates se resuelven por documento y orden dentro de él, así que el resultado es
     determinista. Si nada alcanza el umbral devuelve una lista vacía.
@@ -91,4 +94,5 @@ def search_chunks(
         limit=k,
         max_distance=1.0 - min_score,
         document_ids=scope,
+        status=status,
     )

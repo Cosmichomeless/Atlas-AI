@@ -189,6 +189,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Buscar fragmentos relevantes
+         * @description Fragmentos de mis documentos listos (READY) más parecidos a la pregunta, con su origen.
+         */
+        post: operations["search_api_v1_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -373,6 +393,89 @@ export interface components {
              * @description Entre 10 y 128 caracteres.
              */
             password: string;
+        };
+        /** SearchRequest */
+        SearchRequest: {
+            /**
+             * Question
+             * @description Pregunta en lenguaje natural.
+             */
+            question: string;
+            /**
+             * K
+             * @description Máximo de resultados (por defecto SEARCH_*).
+             */
+            k?: number | null;
+            /**
+             * Min Score
+             * @description Similitud coseno mínima, de 0 a 1 (por defecto SEARCH_*).
+             */
+            min_score?: number | null;
+            /**
+             * Document Ids
+             * @description Limita la búsqueda a estos documentos. Omitido = todos los míos listos; ajenos o inexistentes no aportan resultados.
+             */
+            document_ids?: string[] | null;
+        };
+        /** SearchResponse */
+        SearchResponse: {
+            /** Results */
+            results: components["schemas"]["SearchResult"][];
+            /**
+             * K
+             * @description Máximo de resultados aplicado.
+             */
+            k: number;
+            /**
+             * Min Score
+             * @description Umbral de similitud aplicado.
+             */
+            min_score: number;
+        };
+        /** SearchResult */
+        SearchResult: {
+            /**
+             * Snippet
+             * @description Texto breve del fragmento, acortado si es largo.
+             */
+            snippet: string;
+            /**
+             * Score
+             * @description Similitud coseno en [-1, 1]; 1 = misma dirección.
+             */
+            score: number;
+            source: components["schemas"]["SearchSource"];
+        };
+        /**
+         * SearchSource
+         * @description Dónde está el fragmento: lo necesario para citarlo y abrir el original.
+         */
+        SearchSource: {
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Chunk Id
+             * Format: uuid
+             */
+            chunk_id: string;
+            /**
+             * Ordinal
+             * @description Posición del fragmento dentro del documento.
+             */
+            ordinal: number;
+            /** Page */
+            page: number | null;
+            /** Section */
+            section: string | null;
+            /** Start Line */
+            start_line: number | null;
+            /** End Line */
+            end_line: number | null;
         };
         /**
          * UserPublic
@@ -1043,6 +1146,84 @@ export interface operations {
             };
             /** @description Error interno del servidor. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    search_api_v1_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Autenticación requerida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tienes permiso para realizar esta acción. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La solicitud entra en conflicto con el estado actual del recurso. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Los datos enviados no son válidos. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error interno del servidor. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Servicio no disponible. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
