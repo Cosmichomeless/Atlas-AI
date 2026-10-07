@@ -232,6 +232,28 @@ chosen by `EMBEDDING_PROVIDER` through `get_embedding_provider()`:
 - `embed` always validates: no blank texts, one vector per text, the configured dimension and finite values.
   Large inputs are sent in batches of `max_batch_size`, keeping order.
 
+### LLM provider
+
+`app/llm` hides the text-generation service behind `LLMProvider` (`complete(messages) -> Completion`),
+chosen by `LLM_PROVIDER` through `get_llm_provider()`. Model and parameters come from the environment:
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `LLM_PROVIDER` | `fake` | `fake` or `openai` |
+| `LLM_MODEL` | `gpt-4o-mini` | Model name sent to the provider |
+| `LLM_TEMPERATURE` | `0` | Sampling temperature, 0 to 2 (0 keeps evaluations reproducible) |
+| `LLM_MAX_OUTPUT_TOKENS` | `512` | Cap on generated tokens |
+| `LLM_TIMEOUT_SECONDS` | `60` | HTTP timeout of the `openai` adapter |
+
+- `fake` (default, also used by the tests): deterministic, no network; records every conversation in `calls` and
+  accepts a custom `responder`, so tests can script any answer.
+- `openai`: `POST {OPENAI_BASE_URL}/chat/completions` with `OPENAI_API_KEY`. Errors become `LLMError` without the
+  key or the prompt; tests use a mocked transport.
+- Every `Completion` carries the `LLMSpec` (`spec.key` → `openai/gpt-4o-mini/v1`), the `LLMParams` that produced
+  it, token usage when known and the `finish_reason` (`truncated` is true when the output hit the cap).
+- `complete` always validates: a non-empty conversation with a known role per message, no blank messages, at
+  least one user message, and a non-empty answer.
+
 ### Vector storage
 
 `app/embeddings/store.py` persists vectors in `chunk_embeddings` (pgvector) next to the chunk they describe:
