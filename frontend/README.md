@@ -19,7 +19,7 @@ Aplicación web en Next.js (App Router) y TypeScript.
 
 - `src/app/` — rutas, layouts y estilos globales (App Router).
 - `src/app/(public)/` — `/login` y `/register`. `src/app/(app)/` — rutas privadas (`/documents`…), envueltas en `PrivateShell`.
-- `src/components/` — componentes compartidos (`AuthForm`, `PrivateShell`) y `documents/` (`DocumentLibrary`, `UploadForm`).
+- `src/components/` — componentes compartidos (`AuthForm`, `PrivateShell`) y `documents/` (`DocumentLibrary`, `DocumentRow`, `UploadForm`).
 - `src/lib/documents/` — reglas de validación de subida y etiquetas de estado.
 - `src/test/` — utilidades de test: `mockApi` (sustituye `fetch` por un servidor simulado) y doble de `next/navigation`.
 - `src/app/globals.css` — variables de diseño (colores, espaciado, tipografía) y soporte de tema claro/oscuro.
@@ -74,3 +74,17 @@ propietario lo hace el backend, la web solo pinta lo que `GET /api/v1/documents`
   del progreso de envío. Reutiliza el mismo almacén de token CSRF que el cliente tipado
   (`csrf` en `client.ts`) y reintenta una vez con un token nuevo si el servidor responde
   `csrf_failed`. Admite `AbortSignal`.
+
+### Estado de ingestión y acciones
+
+- **Refresco:** mientras la página visible tenga algún documento `UPLOADED` o `PROCESSING`,
+  `DocumentLibrary` vuelve a consultar la lista cada 3 s (`POLL_INTERVAL_MS`). Cuando todos están en
+  `READY`/`FAILED` el temporizador se cancela, también al desmontar o con la pestaña oculta. Un fallo
+  del refresco en segundo plano no tapa la lista (se reintenta solo) y una respuesta antigua nunca
+  pisa a una más reciente.
+- **Documento fallido:** «Ver causa» pide `GET /documents/{id}` y muestra `error_summary` (la lista
+  no lo incluye); si el servidor no registró causa se explica y se sugiere volver a subirlo.
+- **Eliminar:** pide confirmación, desaparece de la lista al instante y se concilia con una recarga
+  silenciosa. Está desactivado mientras se procesa; si aun así el servidor responde 409
+  (`document_processing`) se mantiene el documento y se muestra el mensaje de reintento; un 404 se
+  trata como «ya eliminado».
