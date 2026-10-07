@@ -104,6 +104,20 @@ All endpoints require a session (`401 unauthorized` otherwise) and only ever see
   against `Content-Length`). A rejected upload leaves no database row and no file; if saving the row
   fails, the stored file is removed. The filename is sanitized metadata only.
 
+### Text extraction
+
+`app/features/documents/extraction.py` turns a stored original into `ExtractedBlock`s, each carrying its
+`document_id` and where the text came from:
+
+- PDF (`pypdf`): one block per page with text, `page` starting at 1 (pages without text are skipped but
+  keep their real number).
+- TXT: one block per paragraph, with `start_line`/`end_line`. Markdown: the same plus `section`, the heading
+  path (`Guide > Install`); headings inside code fences are ignored and a lone heading joins the paragraph
+  that follows.
+- When there is nothing to extract, `ExtractionError` carries a user-readable cause (scanned/image-only PDF,
+  password-protected or damaged PDF, empty or non-UTF-8 text). `extract_or_fail(document, storage)` stores that
+  cause in `error_summary` and moves the `PROCESSING` document to `FAILED`; the worker owns the commit.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
