@@ -66,6 +66,7 @@ export function PrivateShell({ children }: { children: ReactNode }) {
         </Link>
         <nav aria-label="Principal" className={styles.nav}>
           <Link href="/documents">Documentos</Link>
+          <Link href="/ask">Preguntar</Link>
         </nav>
         <div className={styles.user}>
           <span className={styles.email}>{state.user.email}</span>

@@ -88,3 +88,22 @@ propietario lo hace el backend, la web solo pinta lo que `GET /api/v1/documents`
   silenciosa. Está desactivado mientras se procesa; si aun así el servidor responde 409
   (`document_processing`) se mantiene el documento y se muestra el mensaje de reintento; un 404 se
   trata como «ya eliminado».
+
+## Preguntas y respuestas
+
+Ruta privada `/ask` (enlace «Preguntar» en el marco). `QuestionView` envía `POST /api/v1/questions`.
+
+- **Alcance:** lista los documentos `READY` del usuario (`GET /documents?status=READY`, hasta 100) con
+  casillas. Sin selección no se envía `document_ids` y el backend consulta todos los listos; con
+  selección se envían solo los marcados. Sin documentos listos se guía a «Subir uno».
+- **Pregunta:** `textarea` con contador y `maxLength` de 1000 (valor por defecto de
+  `QUESTION_MAX_CHARS`; el servidor decide y devuelve 422 si no la acepta). No se envía vacía.
+- **Sin duplicados:** una ref de «petición en vuelo» corta un segundo envío inmediato (Enter o doble
+  clic) antes de que React deshabilite el botón; mientras tanto el formulario queda bloqueado.
+- **Resultado, siempre distinguible:**
+  - *Respuesta* (`article` «Respuesta»): texto con etiquetas `[S#]`, fuentes (archivo, página,
+    sección), aviso si `truncated` y las frases sin fuente (`uncited_statements`).
+  - *Abstención* (`article` «Sin respuesta»): es un 200 con `status: "abstained"`, no un error; el
+    mensaje depende de `abstention_reason` (`src/lib/questions/messages.ts`).
+  - *Error* (`role="alert"`): 409 `index_incompatible` (reindexar), 503 `embedding_unavailable` /
+    `llm_unavailable` (reintentar más tarde), 422 y fallo de red con el mensaje del servidor.

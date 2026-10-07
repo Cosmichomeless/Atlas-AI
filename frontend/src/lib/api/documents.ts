@@ -21,3 +21,8 @@ export function deleteDocument(id: string): Promise<void> {
     api.DELETE("/api/v1/documents/{document_id}", { params: { path: { document_id: id } } }),
   );
 }
+
+/** Documentos ya procesados (los únicos que pueden responder preguntas), hasta el máximo por página. */
+export function listReadyDocuments(): Promise<DocumentList> {
+  return unwrap(api.GET("/api/v1/documents", { params: { query: { limit: 100, offset: 0, status: "READY" } } }));
+}
