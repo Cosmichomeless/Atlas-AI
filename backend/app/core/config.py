@@ -87,6 +87,10 @@ class Settings(BaseSettings):
         description="Similitud coseno mínima por defecto; lo que quede por debajo no se devuelve.",
     )
 
+    search_max_documents: int = Field(
+        default=50, ge=1, description="Máximo de documentos que una búsqueda puede seleccionar."
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)

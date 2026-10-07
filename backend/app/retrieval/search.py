@@ -1,6 +1,7 @@
 """Búsqueda semántica: los k fragmentos más parecidos a una pregunta, con puntuación y origen."""
 
 import uuid
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
@@ -26,10 +27,28 @@ class SearchLimits:
     default_k: int = 5
     max_k: int = 20
     min_score: float = 0.0
+    max_documents: int = 50
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "SearchLimits":
-        return cls(settings.search_default_k, settings.search_max_k, settings.search_min_score)
+        return cls(
+            settings.search_default_k,
+            settings.search_max_k,
+            settings.search_min_score,
+            settings.search_max_documents,
+        )
+
+    def resolve_scope(self, document_ids: Collection[uuid.UUID] | None) -> set[uuid.UUID] | None:
+        """Documentos seleccionados, sin repetidos y dentro del máximo; `None` = todos los míos."""
+        if document_ids is None:
+            return None
+        scope = set(document_ids)
+        if len(scope) > self.max_documents:
+            raise InvalidSearchError(
+                "too_many_documents",
+                f"Puedes limitar la búsqueda a {self.max_documents} documentos como máximo.",
+            )
+        return scope
 
     def resolve(self, k: int | None, min_score: float | None) -> tuple[int, float]:
         """`k` y umbral efectivos, validados; lo no indicado toma el valor por defecto."""
@@ -52,17 +71,24 @@ def search_chunks(
     limits: SearchLimits,
     k: int | None = None,
     min_score: float | None = None,
+    document_ids: Collection[uuid.UUID] | None = None,
 ) -> list[SimilarChunk]:
     """Hasta `k` fragmentos del usuario con similitud >= `min_score`, de más a menos parecido.
+
+    Solo busca entre los documentos de `owner_id`; con `document_ids` además se limita a esa
+    selección. Un identificador ajeno o inexistente no da error ni se distingue del otro: no aporta
+    resultados. Una selección vacía no busca en ningún documento (nunca equivale a "todos").
 
     Los empates se resuelven por documento y orden dentro de él, así que el resultado es
     determinista. Si nada alcanza el umbral devuelve una lista vacía.
     """
     k, min_score = limits.resolve(k, min_score)
+    scope = limits.resolve_scope(document_ids)
     return nearest_chunks(
         session,
         question.embedding,
         owner_id=owner_id,
         limit=k,
         max_distance=1.0 - min_score,
+        document_ids=scope,
     )

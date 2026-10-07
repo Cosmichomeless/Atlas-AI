@@ -1,7 +1,7 @@
 """Persistencia y búsqueda de vectores de fragmentos en pgvector."""
 
 import uuid
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
 from sqlalchemy import ColumnElement, and_, delete, or_, select
@@ -91,11 +91,15 @@ def nearest_chunks(
     owner_id: uuid.UUID,
     limit: int = 5,
     max_distance: float | None = None,
+    document_ids: Collection[uuid.UUID] | None = None,
 ) -> list[SimilarChunk]:
     """Fragmentos del propietario más parecidos a `query`, solo entre vectores de su misma spec.
 
     Filtra siempre por propietario: es la barrera que impide recuperar documentos ajenos. Con
     `max_distance` descarta, en la propia consulta, lo que queda más lejos de esa distancia coseno.
+    `document_ids` restringe la búsqueda a esos documentos —también dentro de la consulta, para que
+    el límite se aplique ya filtrado—; los que no son del propietario simplemente no coinciden, sin
+    distinguirse de los inexistentes. Una colección vacía no busca en ningún documento.
     """
     ensure_fits_schema(query.spec)
     distance = ChunkEmbedding.embedding.cosine_distance(list(query.vector))
@@ -109,5 +113,7 @@ def nearest_chunks(
     )
     if max_distance is not None:
         statement = statement.where(distance <= max_distance)
+    if document_ids is not None:
+        statement = statement.where(DocumentChunk.document_id.in_(document_ids))
     rows = session.execute(statement).all()
     return [SimilarChunk(chunk, document, float(dist)) for chunk, document, dist in rows]
