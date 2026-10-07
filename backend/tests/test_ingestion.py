@@ -14,6 +14,7 @@ from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import LocalFileStorage
 from app.features.users.models import User
 from app.ingestion import service
+from app.ingestion.chunking import ChunkPolicy
 from app.ingestion.service import claim_next, process, run_once
 from app.ingestion.worker import run
 from tests.factories import make_document
@@ -23,6 +24,7 @@ from tests.test_documents_api import URL, sign_in
 T0 = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 LEASE = 60
 MAX_ATTEMPTS = 3
+POLICY = ChunkPolicy(size=1000, overlap=150)
 
 
 def add_user(session: Session) -> User:
@@ -156,7 +158,9 @@ def test_processing_a_valid_document_makes_it_ready(
 ) -> None:
     document = add_document(db_session, storage, make_pdf(["Hola", "Mundo"]))
 
-    assert run_once(db_session, storage, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0)
+    assert run_once(
+        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+    )
 
     assert document.status is DocumentStatus.READY
     assert document.error_summary is None
@@ -169,7 +173,9 @@ def test_a_document_without_text_ends_failed_with_its_cause(
 ) -> None:
     document = add_document(db_session, storage, make_pdf([None]))
 
-    run_once(db_session, storage, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0)
+    run_once(
+        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+    )
 
     assert document.status is DocumentStatus.FAILED
     assert document.error_summary is not None
@@ -179,7 +185,9 @@ def test_a_document_without_text_ends_failed_with_its_cause(
 def test_run_once_reports_when_there_was_nothing_to_do(
     db_session: Session, storage: LocalFileStorage
 ) -> None:
-    assert not run_once(db_session, storage, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS)
+    assert not run_once(
+        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS
+    )
 
 
 def test_an_unexpected_error_requeues_the_document_for_retry(
@@ -191,7 +199,9 @@ def test_an_unexpected_error_requeues_the_document_for_retry(
     monkeypatch.setattr(service, "extract_or_fail", boom)
     document = add_document(db_session, storage, b"hola")
 
-    run_once(db_session, storage, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0)
+    run_once(
+        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+    )
 
     assert document.status is DocumentStatus.UPLOADED
     assert document.error_summary == service.UNEXPECTED_RETRY
@@ -209,12 +219,21 @@ def test_unexpected_errors_end_failed_once_attempts_run_out(
     document = add_document(db_session, storage, b"hola")
 
     for _ in range(MAX_ATTEMPTS):
-        assert run_once(db_session, storage, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0)
+        assert run_once(
+            db_session,
+            storage,
+            policy=POLICY,
+            lease_seconds=LEASE,
+            max_attempts=MAX_ATTEMPTS,
+            now=T0,
+        )
 
     assert document.status is DocumentStatus.FAILED
     assert document.attempts == MAX_ATTEMPTS
     assert document.error_summary == service.UNEXPECTED_FAILURE
-    assert not run_once(db_session, storage, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0)
+    assert not run_once(
+        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+    )
 
 
 def test_process_keeps_a_failed_extraction_failed(
@@ -224,7 +243,9 @@ def test_process_keeps_a_failed_extraction_failed(
     document = claim(db_session)
     assert document is not None
 
-    process(db_session, storage, document, max_attempts=MAX_ATTEMPTS)  # sin archivo almacenado
+    process(
+        db_session, storage, document, policy=POLICY, max_attempts=MAX_ATTEMPTS
+    )  # sin archivo almacenado
 
     assert document.status is DocumentStatus.FAILED
     assert document.error_summary == "No se encontró el archivo original."

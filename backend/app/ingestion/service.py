@@ -16,10 +16,13 @@ from app.features.documents.extraction import extract_or_fail
 from app.features.documents.models import Document
 from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import FileStorage
+from app.ingestion.chunk_store import replace_chunks
+from app.ingestion.chunking import ChunkPolicy, chunk_blocks
 
 logger = logging.getLogger(__name__)
 
 INTERRUPTED = "El procesamiento se interrumpió y se superó el número máximo de intentos."
+NO_TEXT = "El documento no contiene texto extraíble."
 UNEXPECTED_RETRY = "Error inesperado durante el procesamiento; se reintentará."
 UNEXPECTED_FAILURE = "Error inesperado durante el procesamiento; se superó el máximo de intentos."
 
@@ -73,7 +76,12 @@ def claim_next(
 
 
 def process(
-    session: Session, storage: FileStorage, document: Document, *, max_attempts: int
+    session: Session,
+    storage: FileStorage,
+    document: Document,
+    *,
+    policy: ChunkPolicy,
+    max_attempts: int,
 ) -> None:
     """Procesa un documento reservado y confirma su estado final.
 
@@ -82,10 +90,19 @@ def process(
     """
     try:
         blocks = extract_or_fail(document, storage)
+        chunks = (
+            chunk_blocks(blocks, policy) if document.status is DocumentStatus.PROCESSING else []
+        )
+        # Sustituye los fragmentos viejos en la misma transacción que el estado final: si el
+        # documento ya no da texto no se queda con restos del contenido anterior.
+        replace_chunks(session, document.id, chunks)
         if document.status is DocumentStatus.PROCESSING:
-            # Aquí se encadenarán las etapas siguientes (fragmentación, embeddings) antes de READY.
-            logger.info("Documento %s: %d bloques extraídos", document.id, len(blocks))
-            document.transition_to(DocumentStatus.READY)
+            if chunks:
+                # Aquí se encadenarán los embeddings antes de pasar a READY.
+                logger.info("Documento %s: %d fragmentos", document.id, len(chunks))
+                document.transition_to(DocumentStatus.READY)
+            else:
+                document.transition_to(DocumentStatus.FAILED, error_summary=NO_TEXT)
         session.commit()
     except Exception:
         logger.exception("Fallo inesperado procesando el documento %s", document.id)
@@ -103,6 +120,7 @@ def run_once(
     session: Session,
     storage: FileStorage,
     *,
+    policy: ChunkPolicy,
     lease_seconds: int,
     max_attempts: int,
     now: datetime | None = None,
@@ -111,5 +129,5 @@ def run_once(
     document = claim_next(session, lease_seconds=lease_seconds, max_attempts=max_attempts, now=now)
     if document is None:
         return False
-    process(session, storage, document, max_attempts=max_attempts)
+    process(session, storage, document, policy=policy, max_attempts=max_attempts)
     return True

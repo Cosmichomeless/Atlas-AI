@@ -12,6 +12,7 @@ from types import FrameType
 from app.core.config import get_settings
 from app.core.db import get_sessionmaker
 from app.features.documents.storage import get_storage
+from app.ingestion.chunking import ChunkPolicy
 from app.ingestion.service import run_once
 
 logger = logging.getLogger("atlas.ingestion")
@@ -20,6 +21,7 @@ logger = logging.getLogger("atlas.ingestion")
 def run(stop: threading.Event) -> None:
     settings = get_settings()
     storage = get_storage()
+    policy = ChunkPolicy.from_settings(settings)
     sessionmaker = get_sessionmaker()
     logger.info("Worker de ingestión iniciado")
     while not stop.is_set():
@@ -29,6 +31,7 @@ def run(stop: threading.Event) -> None:
                 worked = run_once(
                     session,
                     storage,
+                    policy=policy,
                     lease_seconds=settings.ingestion_lease_seconds,
                     max_attempts=settings.ingestion_max_attempts,
                 )
