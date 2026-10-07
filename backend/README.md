@@ -497,6 +497,34 @@ better than it would on top of a real embedding model, and the extractive respon
 trivially 1.0. It shows that the procedure works and what the rule decides with those inputs; repeat it with
 `EMBEDDING_PROVIDER=openai` and `LLM_PROVIDER=openai` before deciding anything for production.
 
+### Quality regression gate
+
+`uv run python -m app.evaluation.gate` is a deterministic subset of the evaluation meant to run on every
+change, locally or in CI. It exits 0 when every threshold holds, 1 when any fails (naming the metric, its
+value and the limit) and 2 when the definition or the dataset is invalid. `--spec` points at another
+definition and `--output` saves the result as JSON. The same check runs inside the test suite
+(`tests/test_evaluation_gate.py`), so `uv run pytest` already enforces it.
+
+- **Deterministic and offline.** Fake embeddings and the extractive responder: no API key, no network, no
+  sampling and no timings. The same commit always produces the same figures. The definition cannot even name
+  a real provider.
+- **Pinned configuration.** Chunking, `top_k`, reranking and the context budget come from
+  `evaluation/gate.json`, not from `.env`, so an environment change does not move the gate.
+- **Agreed thresholds, versioned.** `evaluation/gate.json` holds one `min` or `max` per metric:
+  retrieval recall, MRR and source success; correct rate, faithfulness, citation precision, citation recall
+  and valid abstention rate (minimums); hallucination rate (maximum). Each sits about 0.01 under (or over)
+  the figure measured when the gate was agreed, which is less than the effect of one question, so a change
+  that gets even one question wrong fails. A metric that cannot be measured fails rather than passing.
+- **Changing a threshold is a reviewed decision.** If a change is meant to move a figure (a better ranking,
+  a stricter citation rule), edit the numbers in the same PR and say why; the diff of `gate.json` is what a
+  reviewer looks at. Run the gate and read the printed values to choose them.
+- **A different dataset version is refused.** The thresholds record the dataset key they were agreed on
+  (`atlas-qa@1.0.0`); another version fails with a clear message instead of comparing unlike things.
+
+**What it does not catch.** It watches the pipeline (search, reranking, context, citations) under fake
+models. A worse real model or prompt, or a ranking that only fails with real embeddings, does not show up
+here: use the full reports and the human review for that.
+
 ### Bounded context
 
 `app/answers/context.py` turns the retrieved chunks into the context sent to the model, within an explicit
