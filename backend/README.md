@@ -410,6 +410,35 @@ other queued work, and deletes everything when it ends.
 - **Limit.** With the fake providers (the default) the numbers detect pipeline regressions; they say nothing
   about a real embedding model. Set `EMBEDDING_PROVIDER=openai` to measure one.
 
+### Answer quality
+
+`uv run python -m app.evaluation.answers run` runs the whole pipeline (retrieval, bounded context, generation,
+citation verification) over the dataset and scores each answer. Options: `--dataset`, `--output report.json`,
+`--no-timing`, `--review-sample sample.json`, `--sample-size` and `--seed`. Like the retrieval evaluation, it
+uses a temporary user and leaves nothing behind. The LLM is the one configured (`LLM_PROVIDER`); with `fake`
+(the default) it uses a deterministic extractive responder, a lexical baseline that quotes the closest
+sentence and says `SIN_EVIDENCIA` when overlap is below 0.5 (threshold fixed up front, not tuned on the dataset).
+
+- **Verdict per question.** `correct` (all key facts present and supported), `partial` (some), `incorrect`
+  (none), `hallucination` (an answer to an unanswerable question, or one where fewer than half of its own
+  statements are supported by the fragments it cites), `valid_abstention` and `unnecessary_abstention`.
+  Abstaining on an ambiguous question counts as unnecessary: the system should answer or ask for the reading.
+- **Faithfulness.** Share of the answer's own statements (excluding the `(No consta en los documentos)`
+  ones) that cite a fragment and cover at least 60% of its content words with the cited text. It is lexical:
+  it catches invented content and misattributed citations, not subtle contradictions.
+- **Citation quality.** `citation_precision` (cited fragments that contain annotated evidence),
+  `citation_recall` (evidence pieces cited) and `cited_rate` (statements with a verified citation).
+- **Cost.** Input and output tokens and per-question latency (latency under `timing`, so `--no-timing`
+  reports compare byte for byte). The report records the LLM key, temperature, output limit, prompt version
+  and fingerprint, and context budget.
+- **Human review.** `--review-sample` writes a sample stratified by verdict (seeded, reproducible) with the
+  question, expected key facts and answer. Fill `human_verdict` for each item with one of the verdict names
+  and run `uv run python -m app.evaluation.answers calibrate sample.json` to get accuracy, Cohen's kappa, the
+  confusion matrix and the disagreements. A criterion with low agreement should be revised before its numbers
+  are trusted. The labelling needs a person; it is not done automatically.
+- **Limits.** With fake providers the numbers detect pipeline regressions and say nothing about a real
+  model. One annotator and a small dataset: differences of one or two questions are noise.
+
 ### Bounded context
 
 `app/answers/context.py` turns the retrieved chunks into the context sent to the model, within an explicit
