@@ -11,6 +11,7 @@ from app.embeddings.store import SimilarChunk, nearest_chunks
 from app.features.documents.states import DocumentStatus
 from app.retrieval.dedup import DedupPolicy, Reduction, reduce_redundancy
 from app.retrieval.question import PreparedQuestion
+from app.retrieval.rerank import Reranking, RerankPolicy, rerank
 
 
 class InvalidSearchError(ValueError):
@@ -32,6 +33,8 @@ class SearchLimits:
     max_documents: int = 50
     # None = sin reducir redundancia (los resultados son tal cual los devuelve la consulta).
     dedup: DedupPolicy | None = None
+    # None = el orden es el de la similitud vectorial (comportamiento por defecto).
+    rerank: RerankPolicy | None = None
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "SearchLimits":
@@ -45,6 +48,13 @@ class SearchLimits:
                 settings.search_dedup_window,
                 settings.search_overfetch,
             ),
+            RerankPolicy(
+                settings.search_rerank,
+                settings.search_rerank_weight,
+                settings.search_rerank_pool,
+            )
+            if settings.search_rerank != "off"
+            else None,
         )
 
     def resolve_scope(self, document_ids: Collection[uuid.UUID] | None) -> set[uuid.UUID] | None:
@@ -74,10 +84,11 @@ class SearchLimits:
 
 @dataclass(frozen=True, slots=True)
 class SearchOutcome:
-    """Resultado final y, si se redujo la redundancia, qué se descartó (para medir la política)."""
+    """Resultado final; con dedup, qué se descartó, y con reranking, cómo se reordenó."""
 
     hits: list[SimilarChunk]
     reduction: Reduction | None
+    reranking: Reranking | None = None
 
 
 def search_with_report(
@@ -100,27 +111,31 @@ def search_with_report(
 
     Con `limits.dedup` se piden `overfetch` veces más candidatos, se descartan los repetidos y
     contiguos (ver `app.retrieval.dedup`) y se recorta a `k`: lo redundante no ocupa plazas que
-    corresponden a otras fuentes.
+    corresponden a otras fuentes. Con `limits.rerank` se piden además `pool` veces más, y tras la
+    reducción se reordenan con la puntuación combinada (ver `app.retrieval.rerank`) antes de
+    recortar: cambia el orden, no el contrato ni la puntuación vectorial de cada resultado.
 
     Los empates se resuelven por documento y orden dentro de él, así que el resultado es
     determinista. Si nada alcanza el umbral devuelve una lista vacía.
     """
     k, min_score = limits.resolve(k, min_score)
     scope = limits.resolve_scope(document_ids)
-    policy = limits.dedup
+    policy, reranker = limits.dedup, limits.rerank
+    pool = max(policy.overfetch if policy else 1, reranker.pool if reranker else 1)
     candidates = nearest_chunks(
         session,
         question.embedding,
         owner_id=owner_id,
-        limit=k * policy.overfetch if policy else k,
+        limit=k * pool,
         max_distance=1.0 - min_score,
         document_ids=scope,
         status=status,
     )
-    if policy is None:
-        return SearchOutcome(candidates, None)
-    reduction = reduce_redundancy(candidates, policy)
-    return SearchOutcome(reduction.kept[:k], reduction)
+    reduction = reduce_redundancy(candidates, policy) if policy else None
+    kept = reduction.kept if reduction else candidates
+    reranking = rerank(question.text, kept, reranker) if reranker else None
+    ordered = reranking.ordered if reranking else kept
+    return SearchOutcome(ordered[:k], reduction, reranking)
 
 
 def search_chunks(

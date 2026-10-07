@@ -59,6 +59,7 @@ from app.ingestion.chunking import ChunkPolicy
 from app.ingestion.service import process
 from app.retrieval.dedup import DedupPolicy, normalize, shingles
 from app.retrieval.question import prepare_question
+from app.retrieval.rerank import RerankEntry, Reranking, RerankPolicy
 from app.retrieval.search import SearchLimits, search_with_report
 
 REPORT_SCHEMA = 1
@@ -81,6 +82,7 @@ class EvalConfig:
     min_score: float = 0.0
     dedup: DedupPolicy | None = field(default_factory=DedupPolicy)
     question_max_chars: int = 1000
+    rerank: RerankPolicy | None = None
 
     @classmethod
     def from_settings(cls) -> "EvalConfig":
@@ -94,6 +96,7 @@ class EvalConfig:
             min_score=limits.min_score,
             dedup=limits.dedup,
             question_max_chars=settings.question_max_chars,
+            rerank=limits.rerank,
         )
 
     def limits(self) -> SearchLimits:
@@ -102,6 +105,7 @@ class EvalConfig:
             max_k=max(self.top_k, 20),
             min_score=self.min_score,
             dedup=self.dedup,
+            rerank=self.rerank,
         )
 
     def describe(self) -> dict[str, Any]:
@@ -128,6 +132,7 @@ class EvalConfig:
                 "window": dedup.window,
                 "overfetch": dedup.overfetch,
             },
+            "rerank": None if self.rerank is None else self.rerank.describe(),
         }
 
 
@@ -152,9 +157,11 @@ class QuestionResult:
     reciprocal_rank: float | None
     top_score: float | None
     latency_ms: float
+    # Con reranking: de qué puesto salió cada candidato, sus puntuaciones y dónde quedó.
+    reranking: tuple[RerankEntry, ...] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "id": self.id,
             "kind": self.kind.value,
             "precision": self.precision,
@@ -172,6 +179,21 @@ class QuestionResult:
                 for hit in self.hits
             ],
         }
+        if self.reranking is not None:
+            data["rerank"] = [entry.to_dict() for entry in self.reranking]
+        return data
+
+
+def choose_rerank(
+    base: RerankPolicy | None, mode: str | None, weight: float | None
+) -> RerankPolicy | None:
+    """El reranking pedido en la línea de comandos; sin petición, el de la aplicación."""
+    if mode == "off":
+        return None
+    if mode is None and base is None:
+        return None
+    policy = base or RerankPolicy()
+    return RerankPolicy(policy.strategy, policy.weight if weight is None else weight, policy.pool)
 
 
 def covers(chunk_text: str, evidence: Evidence, chunk_document: str) -> bool:
@@ -185,7 +207,11 @@ def covers(chunk_text: str, evidence: Evidence, chunk_document: str) -> bool:
 
 
 def score_question(
-    question: Question, hits: Sequence[SimilarChunk], *, latency_ms: float
+    question: Question,
+    hits: Sequence[SimilarChunk],
+    *,
+    latency_ms: float,
+    reranking: Reranking | None = None,
 ) -> QuestionResult:
     """Compara lo recuperado con la evidencia anotada y calcula las métricas de la pregunta."""
     marked = [
@@ -201,10 +227,20 @@ def score_question(
         )
         for hit, relevant in marked
     )
-    top_score = round(hits[0].score, SCORE_DIGITS) if hits else 0.0
+    entries = reranking.entries if reranking else None
+    top_score = round(max(hit.score for hit in hits), SCORE_DIGITS) if hits else 0.0
     if question.kind is Kind.UNANSWERABLE:
         return QuestionResult(
-            question.id, question.kind, results, None, None, None, None, top_score, latency_ms
+            question.id,
+            question.kind,
+            results,
+            None,
+            None,
+            None,
+            None,
+            top_score,
+            latency_ms,
+            entries,
         )
 
     sources = {ev.document for ev in question.evidence}
@@ -223,6 +259,7 @@ def score_question(
         reciprocal_rank=round(1 / relevant_ranks[0], SCORE_DIGITS) if relevant_ranks else 0.0,
         top_score=top_score,
         latency_ms=latency_ms,
+        reranking=entries,
     )
 
 
@@ -392,7 +429,14 @@ def evaluate_retrieval(
             session, prepared, owner_id=owner_id, limits=limits, status=DocumentStatus.READY
         )
         latency_ms = (time.perf_counter() - started) * 1000
-        results.append(score_question(question, outcome.hits, latency_ms=round(latency_ms, 3)))
+        results.append(
+            score_question(
+                question,
+                outcome.hits,
+                latency_ms=round(latency_ms, 3),
+                reranking=outcome.reranking,
+            )
+        )
     return RetrievalReport(dataset, config, tuple(results))
 
 
@@ -414,6 +458,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--top-k", type=int, help="k evaluado (por defecto SEARCH_DEFAULT_K)")
     parser.add_argument("--min-score", type=float, help="umbral (por defecto SEARCH_MIN_SCORE)")
     parser.add_argument("--no-dedup", action="store_true", help="sin reducción de redundancia")
+    parser.add_argument(
+        "--rerank",
+        choices=("off", "lexical"),
+        help="reordenación de candidatos (por defecto SEARCH_RERANK)",
+    )
+    parser.add_argument(
+        "--rerank-weight", type=float, help="peso léxico (por defecto SEARCH_RERANK_WEIGHT)"
+    )
     parser.add_argument("--output", type=Path, help="guarda el informe JSON en este archivo")
     parser.add_argument(
         "--no-timing",
@@ -435,6 +487,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         min_score=args.min_score if args.min_score is not None else base.min_score,
         dedup=None if args.no_dedup else base.dedup,
         question_max_chars=base.question_max_chars,
+        rerank=choose_rerank(base.rerank, args.rerank, args.rerank_weight),
     )
     with get_sessionmaker()() as session:
         report = run_retrieval_eval(session, config, dataset)

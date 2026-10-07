@@ -330,6 +330,27 @@ near-identical chunks are dropped.
 | `SEARCH_DEDUP_WINDOW` | 1 | How many ordinals away counts as contiguous (0 = only exact repeats) |
 | `SEARCH_OVERFETCH` | 3 | Candidates fetched per result wanted, to refill the list after reduction |
 
+### Reranking (optional)
+
+`SEARCH_RERANK=lexical` reorders the candidates before cutting to `k`; the default `off` keeps the pure
+vector order. After redundancy reduction, `app/retrieval/rerank.py` scores every candidate with
+`(1 - w) * vector_score + w * lexical_overlap` and sorts (ties keep the vector order, so it is
+deterministic). `lexical_overlap` is the share of the question's content words (accents and stop words
+removed, 6-letter stems so *teletrabajo* matches *teletrabajar*) found in the chunk. It has no network
+call and no inference cost; a model-based reranker would plug in as another strategy.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `SEARCH_RERANK` | `off` | `off` or `lexical` |
+| `SEARCH_RERANK_WEIGHT` | 0.5 (0 to 1) | Weight `w` of the lexical overlap (0 = vector order) |
+| `SEARCH_RERANK_POOL` | 3 | Candidates fetched per result wanted, so there is something to reorder |
+
+The API contract does not change: hits keep their vector `score` (so the list can stop being sorted by it
+when reranking is on) and `openapi.json` is untouched. For comparison, `SearchOutcome.reranking` and the
+evaluation reports (`rerank` per question, `config.rerank`) keep each candidate's source, original rank,
+vector score, lexical score, combined score and final rank. Evaluate it with
+`python -m app.evaluation.retrieval --rerank lexical [--rerank-weight 0.7]`.
+
 ### Search endpoint
 
 `POST /api/v1/search` (session cookie + CSRF) returns the fragments of the caller's documents that best match

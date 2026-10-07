@@ -24,6 +24,7 @@ from app.features.documents.states import DocumentStatus
 from app.features.users.models import User
 from app.ingestion.chunking import ChunkPolicy
 from app.retrieval.dedup import DedupPolicy
+from app.retrieval.rerank import RerankPolicy
 
 QUOTE = "Cada empleada o empleado puede teletrabajar hasta tres días por semana."
 EVIDENCE = Evidence("teletrabajo.md", QUOTE)
@@ -173,6 +174,21 @@ class TestExperiment:
         assert small.to_dict()["config"]["chunking"]["size"] == 300
         assert small.to_dict()["config"]["dedup"] is None
         assert small.to_json(include_timing=False) != default.to_json(include_timing=False)
+
+    def test_reranking_is_recorded_with_sources_and_scores_to_compare(
+        self, db_session: Session
+    ) -> None:
+        plain = run_retrieval_eval(db_session, config()).to_dict()
+        reranked = run_retrieval_eval(db_session, config(rerank=RerankPolicy(weight=0.5))).to_dict()
+        assert plain["config"]["rerank"] is None
+        assert all("rerank" not in q for q in plain["questions"])
+        assert reranked["config"]["rerank"]["key"] == "lexical/v1"
+        entries = reranked["questions"][0]["rerank"]
+        assert {"filename", "original_rank", "final_rank", "vector_score", "lexical_score"} <= (
+            entries[0].keys()
+        )
+        # Los mismos candidatos, en otro orden: el contrato de cada resultado no cambia.
+        assert reranked["questions"][0]["hits"][0].keys() == plain["questions"][0]["hits"][0].keys()
 
     def test_it_finds_the_sources_of_the_questions(self, db_session: Session) -> None:
         metrics = run_retrieval_eval(db_session, config(top_k=5)).metrics

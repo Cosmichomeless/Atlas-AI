@@ -106,6 +106,17 @@ class Settings(BaseSettings):
         default=3, ge=1, description="Candidatos pedidos por cada resultado antes de reducir."
     )
 
+    search_rerank: Literal["off", "lexical"] = Field(
+        default="off",
+        description="Reordenación de candidatos: `off` (solo similitud vectorial) o `lexical`.",
+    )
+    search_rerank_weight: float = Field(
+        default=0.5, ge=0, le=1, description="Peso del solape léxico en la puntuación combinada."
+    )
+    search_rerank_pool: int = Field(
+        default=3, ge=1, description="Candidatos pedidos por cada resultado antes de reordenar."
+    )
+
     answer_context_max_tokens: int = Field(
         default=3000,
         ge=1,
