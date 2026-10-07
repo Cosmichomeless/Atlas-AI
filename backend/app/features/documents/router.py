@@ -2,13 +2,14 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Query, UploadFile
+from fastapi import APIRouter, Depends, Header, Query, Response, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.errors import AppError, error_responses
 from app.core.config import get_settings
 from app.features.auth.dependencies import CurrentUser, SessionDep
 from app.features.documents import queries
+from app.features.documents.deletion import DocumentBusyError, delete_owned
 from app.features.documents.models import Document
 from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import FileStorage, StoredFileTooLarge, get_storage
@@ -129,3 +130,33 @@ def upload_document(
         storage.delete(document.storage_key)
         raise
     return DocumentDetail.model_validate(document)
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=204,
+    summary="Eliminar un documento",
+    responses=error_responses(404, 409, 422),
+)
+def delete_document(
+    document_id: uuid.UUID,
+    user: CurrentUser,
+    session: SessionDep,
+    storage: Annotated[FileStorage, Depends(get_storage)],
+) -> Response:
+    """Elimina el documento con su archivo, fragmentos y vectores.
+
+    Un ID inexistente o ajeno devuelve el mismo 404. Si un worker lo está procesando responde 409:
+    se puede reintentar al terminar.
+    """
+    try:
+        deleted = delete_owned(session, storage, user.id, document_id)
+    except DocumentBusyError as exc:
+        raise AppError(
+            409,
+            "document_processing",
+            "El documento se está procesando; inténtalo de nuevo en unos instantes.",
+        ) from exc
+    if not deleted:
+        raise AppError(404, "document_not_found", "Documento no encontrado.")
+    return Response(status_code=204)

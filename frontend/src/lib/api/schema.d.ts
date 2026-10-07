@@ -176,7 +176,14 @@ export interface paths {
         get: operations["get_document_api_v1_documents__document_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Eliminar un documento
+         * @description Elimina el documento con su archivo, fragmentos y vectores.
+         *
+         *     Un ID inexistente o ajeno devuelve el mismo 404. Si un worker lo está procesando responde 409:
+         *     se puede reintentar al terminar.
+         */
+        delete: operations["delete_document_api_v1_documents__document_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -944,6 +951,80 @@ export interface operations {
             };
             /** @description Recurso no encontrado. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Los datos enviados no son válidos. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error interno del servidor. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_document_api_v1_documents__document_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Autenticación requerida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tienes permiso para realizar esta acción. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Recurso no encontrado. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La solicitud entra en conflicto con el estado actual del recurso. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

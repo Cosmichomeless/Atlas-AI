@@ -103,6 +103,13 @@ All endpoints require a session (`401 unauthorized` otherwise) and only ever see
   `422 empty_file` / `invalid_filename`, `413 file_too_large` (limit `MAX_UPLOAD_MB`, also checked early
   against `Content-Length`). A rejected upload leaves no database row and no file; if saving the row
   fails, the stored file is removed. The filename is sanitized metadata only.
+- `DELETE /api/v1/documents/{id}` — removes the document with its stored file, chunks and vectors and
+  returns `204`. Another user's id and a missing id both return `404 document_not_found`, and nothing is
+  touched. While a worker holds the document (`PROCESSING` with a live lease) it answers
+  `409 document_processing`; retry once it finishes. A `PROCESSING` document whose lease expired (dead
+  worker) can be deleted. The file goes first (a failure keeps the document so the delete can be retried, and
+  no unreachable file is left behind); chunks and vectors disappear with the row (`ON DELETE CASCADE`). If a
+  worker's document vanishes mid-processing, the worker logs it and moves on.
 
 ### Ingestion worker
 
