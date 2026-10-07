@@ -16,14 +16,20 @@ from app.ingestion.chunk_store import list_chunks, replace_chunks
 from app.ingestion.chunking import Chunk, ChunkPolicy
 from app.ingestion.service import run_once
 from tests.pdfs import make_pdf
-from tests.test_ingestion import LEASE, MAX_ATTEMPTS, POLICY, T0, add_document
+from tests.test_ingestion import EMBEDDER, LEASE, MAX_ATTEMPTS, POLICY, T0, add_document
 
 SMALL = ChunkPolicy(size=100, overlap=20)
 
 
 def ingest(session: Session, storage: LocalFileStorage, policy: ChunkPolicy = POLICY) -> None:
     run_once(
-        session, storage, policy=policy, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+        session,
+        storage,
+        policy=policy,
+        embedder=EMBEDDER,
+        lease_seconds=LEASE,
+        max_attempts=MAX_ATTEMPTS,
+        now=T0,
     )
 
 

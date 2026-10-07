@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, delete, select
 from sqlalchemy.orm import Session
 
+from app.embeddings.fake import FakeEmbeddingProvider
 from app.features.documents.models import Document
 from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import LocalFileStorage
@@ -25,6 +26,7 @@ T0 = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 LEASE = 60
 MAX_ATTEMPTS = 3
 POLICY = ChunkPolicy(size=1000, overlap=150)
+EMBEDDER = FakeEmbeddingProvider("fake-model", 1536)
 
 
 def add_user(session: Session) -> User:
@@ -159,7 +161,13 @@ def test_processing_a_valid_document_makes_it_ready(
     document = add_document(db_session, storage, make_pdf(["Hola", "Mundo"]))
 
     assert run_once(
-        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+        db_session,
+        storage,
+        policy=POLICY,
+        embedder=EMBEDDER,
+        lease_seconds=LEASE,
+        max_attempts=MAX_ATTEMPTS,
+        now=T0,
     )
 
     assert document.status is DocumentStatus.READY
@@ -174,7 +182,13 @@ def test_a_document_without_text_ends_failed_with_its_cause(
     document = add_document(db_session, storage, make_pdf([None]))
 
     run_once(
-        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+        db_session,
+        storage,
+        policy=POLICY,
+        embedder=EMBEDDER,
+        lease_seconds=LEASE,
+        max_attempts=MAX_ATTEMPTS,
+        now=T0,
     )
 
     assert document.status is DocumentStatus.FAILED
@@ -186,7 +200,12 @@ def test_run_once_reports_when_there_was_nothing_to_do(
     db_session: Session, storage: LocalFileStorage
 ) -> None:
     assert not run_once(
-        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS
+        db_session,
+        storage,
+        policy=POLICY,
+        embedder=EMBEDDER,
+        lease_seconds=LEASE,
+        max_attempts=MAX_ATTEMPTS,
     )
 
 
@@ -200,7 +219,13 @@ def test_an_unexpected_error_requeues_the_document_for_retry(
     document = add_document(db_session, storage, b"hola")
 
     run_once(
-        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+        db_session,
+        storage,
+        policy=POLICY,
+        embedder=EMBEDDER,
+        lease_seconds=LEASE,
+        max_attempts=MAX_ATTEMPTS,
+        now=T0,
     )
 
     assert document.status is DocumentStatus.UPLOADED
@@ -223,6 +248,7 @@ def test_unexpected_errors_end_failed_once_attempts_run_out(
             db_session,
             storage,
             policy=POLICY,
+            embedder=EMBEDDER,
             lease_seconds=LEASE,
             max_attempts=MAX_ATTEMPTS,
             now=T0,
@@ -232,7 +258,13 @@ def test_unexpected_errors_end_failed_once_attempts_run_out(
     assert document.attempts == MAX_ATTEMPTS
     assert document.error_summary == service.UNEXPECTED_FAILURE
     assert not run_once(
-        db_session, storage, policy=POLICY, lease_seconds=LEASE, max_attempts=MAX_ATTEMPTS, now=T0
+        db_session,
+        storage,
+        policy=POLICY,
+        embedder=EMBEDDER,
+        lease_seconds=LEASE,
+        max_attempts=MAX_ATTEMPTS,
+        now=T0,
     )
 
 
@@ -244,7 +276,7 @@ def test_process_keeps_a_failed_extraction_failed(
     assert document is not None
 
     process(
-        db_session, storage, document, policy=POLICY, max_attempts=MAX_ATTEMPTS
+        db_session, storage, document, policy=POLICY, embedder=EMBEDDER, max_attempts=MAX_ATTEMPTS
     )  # sin archivo almacenado
 
     assert document.status is DocumentStatus.FAILED

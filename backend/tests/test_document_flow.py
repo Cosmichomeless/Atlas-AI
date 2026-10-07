@@ -12,6 +12,7 @@ from app.ingestion.chunking import ChunkPolicy
 from app.ingestion.service import run_once
 from tests.pdfs import make_pdf
 from tests.test_documents_api import URL, sign_in
+from tests.test_ingestion import EMBEDDER
 
 ALICE = "alice@example.com"
 BOB = "bob@example.com"
@@ -24,7 +25,9 @@ def upload(client: TestClient, filename: str, content: bytes) -> Response:
 
 def ingest_all(session: Session, storage: LocalFileStorage) -> int:
     done = 0
-    while run_once(session, storage, policy=POLICY, lease_seconds=60, max_attempts=3):
+    while run_once(
+        session, storage, policy=POLICY, embedder=EMBEDDER, lease_seconds=60, max_attempts=3
+    ):
         done += 1
     return done
 

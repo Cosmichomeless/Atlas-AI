@@ -12,6 +12,10 @@ from app.embeddings.provider import Embedding, EmbeddingError, EmbeddingSpec
 from app.features.documents.models import Document, DocumentChunk
 
 
+class IncompatibleDimensionsError(EmbeddingError):
+    """El proveedor produce una dimensión que la columna de vectores no admite (configuración)."""
+
+
 @dataclass(frozen=True, slots=True)
 class SimilarChunk:
     """Fragmento encontrado, con su documento (para citarlo) y su distancia coseno (0 = igual)."""
@@ -24,7 +28,7 @@ class SimilarChunk:
 def ensure_fits_schema(spec: EmbeddingSpec) -> None:
     """La columna tiene una dimensión fija: rechaza cualquier otra antes de tocar la base."""
     if spec.dimensions != VECTOR_DIMENSIONS:
-        raise EmbeddingError(
+        raise IncompatibleDimensionsError(
             f"La columna de vectores admite {VECTOR_DIMENSIONS} dimensiones y {spec.key} produce "
             f"{spec.dimensions}: ajusta EMBEDDING_DIMENSIONS o migra y reindexa"
         )

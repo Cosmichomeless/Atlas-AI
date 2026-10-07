@@ -121,6 +121,14 @@ uv run python -m app.ingestion.worker   # from backend/; run as many as you like
   readable cause instead of looping forever.
 - A document that cannot be processed (no text, corrupt, encrypted) ends `FAILED` with its cause; an
   unexpected error puts it back to `UPLOADED` for another try (or `FAILED` once attempts run out).
+- Extraction, chunking and indexing happen in **one transaction**: the worker embeds every chunk with the
+  configured provider (`get_embedding_provider()`, batched) and only then marks the document `READY`, so a
+  `READY` document always has all its chunks indexed. If the provider fails midway nothing is kept (no half-written
+  vectors, previous chunks and vectors survive a failed reindex) and the document goes back to `UPLOADED` for
+  another try, or `FAILED` once attempts run out. Reindexing replaces vectors, never duplicates them. A vector
+  dimension the schema cannot hold (`EMBEDDING_DIMENSIONS` ≠ 1536) is a configuration error: the document fails
+  immediately with a message naming the setting, without calling the provider. Error summaries never include the
+  provider's message.
 - `SIGINT`/`SIGTERM` finish the current document and exit. When the queue is empty the worker sleeps
   `INGESTION_POLL_SECONDS`.
 
