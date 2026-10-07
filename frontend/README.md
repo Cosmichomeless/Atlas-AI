@@ -121,3 +121,17 @@ mientras carga, así que no hay peticiones repetidas.
   resto de fallos (red, 5xx) se explican y permiten reintentar pulsando de nuevo.
 - **Backend:** el endpoint filtra por propietario y exige que el fragmento pertenezca al documento
   de la URL; ajeno, inexistente o borrado devuelven el mismo 404.
+
+### Pruebas de los estados principales
+
+`src/test/journeys.test.tsx` recorre las páginas reales (`/documents`, `/ask`) con la API
+simulada (`mockApi`), sin red ni backend:
+
+- Subida fallida (413) → se explica, no aparece documento → reintento correcto → «En cola» →
+  «Procesando» → «Listo» por el refresco automático; y un documento `FAILED` muestra su causa.
+- Pregunta sin evidencia (abstención, bloque propio y sin alerta) → pregunta mejor con respuesta que
+  sustituye a la abstención.
+- Con dos citas, cada una abre **su** pasaje (el de otro documento no se mezcla) y una fuente
+  borrada avisa solo en su cita sin impedir abrir las demás.
+
+Los componentes tienen además sus propias pruebas unitarias junto al código.
