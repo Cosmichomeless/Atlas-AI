@@ -141,6 +141,8 @@ def _line_at(
     start, end = spans[index]
     if position < start:  # cae en el separador: primera línea del siguiente / última del anterior
         return block.start_line if first else group[index - 1].end_line
+    if not first and position == end - 1:  # termina con el bloque: su última línea real
+        return block.end_line
     return min(block.start_line + text.count("\n", start, position), block.end_line)
 
 
