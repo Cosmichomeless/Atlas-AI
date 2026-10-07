@@ -70,6 +70,10 @@ class Document(Base):
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Arrendamiento del worker: si vence con el documento en PROCESSING, otro puede recuperarlo.
     lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Con qué se indexó por última vez (`EmbeddingSpec.key` y `ChunkPolicy.key`). Solo hay valor
+    # mientras el documento está READY; sirve para detectar los índices obsoletos y reindexarlos.
+    index_embedding: Mapped[str | None] = mapped_column(String(400))
+    index_chunking: Mapped[str | None] = mapped_column(String(100))
 
     def __init__(self, **kwargs: Any) -> None:
         kwargs.setdefault("id", uuid.uuid4())
@@ -90,15 +94,23 @@ class Document(Base):
         *,
         error_summary: str | None = None,
         lease_expires_at: datetime | None = None,
+        index_embedding: str | None = None,
+        index_chunking: str | None = None,
         now: datetime | None = None,
     ) -> None:
-        """Cambia de estado y registra fechas, intentos y error; lanza si la transición no vale."""
+        """Cambia de estado y registra fechas, intentos y error; lanza si la transición no vale.
+
+        `index_embedding`/`index_chunking` anotan con qué se indexó el documento al llegar a READY;
+        en cualquier otro estado se borran, porque ya no describen un índice vigente.
+        """
         ensure_transition(self.status, target)
         if target is DocumentStatus.FAILED and not (error_summary and error_summary.strip()):
             raise ValueError("Pasar a FAILED exige un error resumido.")
         now = now or datetime.now(UTC)
 
         self.status = target
+        self.index_embedding = index_embedding if target is DocumentStatus.READY else None
+        self.index_chunking = index_chunking if target is DocumentStatus.READY else None
         match target:
             case DocumentStatus.PROCESSING:
                 self.attempts += 1

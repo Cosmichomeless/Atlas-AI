@@ -22,6 +22,10 @@ from dataclasses import dataclass
 from app.core.config import Settings
 from app.features.documents.extraction import ExtractedBlock
 
+# Súbela al cambiar el algoritmo de corte: los documentos indexados con otra versión quedan
+# obsoletos aunque el tamaño y el solape no cambien (ver `app.ingestion.reindex`).
+CHUNKER_VERSION = 1
+
 _SEPARATOR = "\n\n"
 # De más a menos preferido; el corte queda justo después del separador.
 _BREAKS = ("\n\n", "\n", ". ", "? ", "! ", "; ", ", ", " ")
@@ -37,6 +41,11 @@ class ChunkPolicy:
             raise ValueError("El tamaño del fragmento debe ser positivo")
         if not 0 <= self.overlap <= self.size // 2:
             raise ValueError("El solape debe estar entre 0 y la mitad del tamaño")
+
+    @property
+    def key(self) -> str:
+        """Huella de la política: lo que debe coincidir para que dos índices sean comparables."""
+        return f"v{CHUNKER_VERSION}:size={self.size},overlap={self.overlap}"
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "ChunkPolicy":
