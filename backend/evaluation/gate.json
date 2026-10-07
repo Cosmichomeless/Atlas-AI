@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "dataset": "atlas-qa-v1",
+  "dataset_key": "atlas-qa@1.0.0",
+  "config": {
+    "chunk_size": 1000,
+    "chunk_overlap": 150,
+    "top_k": 5,
+    "context_max_tokens": 3000,
+    "rerank": { "weight": 0.5, "pool": 3 }
+  },
+  "thresholds": {
+    "retrieval.overall.recall": { "min": 0.91 },
+    "retrieval.overall.mrr": { "min": 0.96 },
+    "retrieval.overall.source_success": { "min": 0.99 },
+    "answers.correct_rate": { "min": 0.58 },
+    "answers.faithfulness": { "min": 0.99 },
+    "answers.citation_precision": { "min": 0.93 },
+    "answers.citation_recall": { "min": 0.88 },
+    "answers.valid_abstention_rate": { "min": 0.82 },
+    "answers.hallucination_rate": { "max": 0.05 }
+  }
+}
