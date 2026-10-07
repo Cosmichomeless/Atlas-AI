@@ -70,6 +70,10 @@ class Settings(BaseSettings):
         default=150, ge=0, description="Caracteres que se repiten entre fragmentos contiguos."
     )
 
+    question_max_chars: int = Field(
+        default=1000, ge=1, description="Longitud máxima de una pregunta, en caracteres."
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)

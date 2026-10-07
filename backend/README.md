@@ -248,6 +248,21 @@ chosen by `EMBEDDING_PROVIDER` through `get_embedding_provider()`:
   ordered by cosine distance, restricted to the owner's documents and to the query's spec; page, section and
   lines of the source stay reachable through `chunk`.
 
+### Question preparation
+
+`app/retrieval/question.py` turns the user's text into a searchable vector.
+
+- `normalize_question` applies Unicode NFC, drops invisible/control characters and collapses whitespace, so
+  equal questions give equal vectors. An empty question (or one with no letter or digit) raises
+  `InvalidQuestionError("question_empty")`; one longer than `QUESTION_MAX_CHARS` (1000 by default, measured
+  after normalizing) raises `question_too_long`. Invalid input never reaches the embedding provider.
+- `prepare_question` embeds with the configured provider, the same one that builds the index, after checking
+  that its dimension fits the vector column (no paid call otherwise).
+- `ensure_index_compatible(session, spec, owner_id=...)` raises `IncompatibleIndexError` when the user has
+  vectors but none from the question's model/dimension/version, instead of returning zero results as if
+  nothing matched. A user with no vectors, or with a half-reindexed index that still has matching vectors, is
+  fine.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
