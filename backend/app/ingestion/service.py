@@ -12,11 +12,13 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.orm import Session
 
+from app.embeddings.provider import EmbeddingError, EmbeddingProvider
+from app.embeddings.store import IncompatibleDimensionsError, ensure_fits_schema, save_embeddings
 from app.features.documents.extraction import extract_or_fail
 from app.features.documents.models import Document
 from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import FileStorage
-from app.ingestion.chunk_store import replace_chunks
+from app.ingestion.chunk_store import list_chunks, replace_chunks
 from app.ingestion.chunking import ChunkPolicy, chunk_blocks
 
 logger = logging.getLogger(__name__)
@@ -25,6 +27,12 @@ INTERRUPTED = "El procesamiento se interrumpió y se superó el número máximo 
 NO_TEXT = "El documento no contiene texto extraíble."
 UNEXPECTED_RETRY = "Error inesperado durante el procesamiento; se reintentará."
 UNEXPECTED_FAILURE = "Error inesperado durante el procesamiento; se superó el máximo de intentos."
+EMBEDDING_RETRY = "No se pudieron generar los embeddings; se reintentará."
+EMBEDDING_FAILURE = "No se pudieron generar los embeddings; se superó el máximo de intentos."
+INCOMPATIBLE_DIMENSIONS = (
+    "La dimensión de los embeddings configurados no cabe en el esquema de vectores; "
+    "revisa EMBEDDING_DIMENSIONS."
+)
 
 
 def select_claimable(now: datetime) -> Select[Document]:
@@ -81,12 +89,17 @@ def process(
     document: Document,
     *,
     policy: ChunkPolicy,
+    embedder: EmbeddingProvider,
     max_attempts: int,
 ) -> None:
     """Procesa un documento reservado y confirma su estado final.
 
-    Un fallo del propio documento (sin texto, dañado…) lo deja FAILED con su causa. Un error
-    inesperado lo devuelve a la cola para reintentar, o lo da por FAILED al agotar los intentos.
+    Extrae, fragmenta e indexa (embeddings) en una sola transacción: el documento llega a READY
+    con todos sus fragmentos indexados o no cambia nada. Un fallo del propio documento (sin texto,
+    dañado…) lo deja FAILED con su causa. Un fallo del proveedor de embeddings o un error
+    inesperado lo devuelve a la cola para reintentar, o lo da por FAILED al agotar los intentos,
+    sin dejar vectores a medias. Una dimensión incompatible con el esquema es de configuración:
+    reintentar no ayuda, así que falla de inmediato.
     """
     try:
         blocks = extract_or_fail(document, storage)
@@ -98,22 +111,45 @@ def process(
         replace_chunks(session, document.id, chunks)
         if document.status is DocumentStatus.PROCESSING:
             if chunks:
-                # Aquí se encadenarán los embeddings antes de pasar a READY.
-                logger.info("Documento %s: %d fragmentos", document.id, len(chunks))
+                _index_chunks(session, document, embedder)
+                logger.info("Documento %s: %d fragmentos indexados", document.id, len(chunks))
                 document.transition_to(DocumentStatus.READY)
             else:
                 document.transition_to(DocumentStatus.FAILED, error_summary=NO_TEXT)
         session.commit()
-    except Exception:
-        logger.exception("Fallo inesperado procesando el documento %s", document.id)
+    except IncompatibleDimensionsError:
+        logger.exception("Dimensión de embeddings incompatible con el esquema (%s)", document.id)
         session.rollback()
         session.refresh(document)
-        if document.attempts >= max_attempts:
-            document.transition_to(DocumentStatus.FAILED, error_summary=UNEXPECTED_FAILURE)
-        else:
-            document.transition_to(DocumentStatus.UPLOADED)
-            document.error_summary = UNEXPECTED_RETRY
+        document.transition_to(DocumentStatus.FAILED, error_summary=INCOMPATIBLE_DIMENSIONS)
         session.commit()
+    except EmbeddingError:
+        logger.exception("Fallo de embeddings procesando el documento %s", document.id)
+        _retry_or_fail(session, document, max_attempts, EMBEDDING_RETRY, EMBEDDING_FAILURE)
+    except Exception:
+        logger.exception("Fallo inesperado procesando el documento %s", document.id)
+        _retry_or_fail(session, document, max_attempts, UNEXPECTED_RETRY, UNEXPECTED_FAILURE)
+
+
+def _index_chunks(session: Session, document: Document, embedder: EmbeddingProvider) -> None:
+    """Genera y guarda los vectores de los fragmentos recién escritos (sin confirmar)."""
+    ensure_fits_schema(embedder.spec)
+    chunks = list_chunks(session, document.id)
+    save_embeddings(session, chunks, embedder.embed([chunk.text for chunk in chunks]))
+
+
+def _retry_or_fail(
+    session: Session, document: Document, max_attempts: int, retry: str, failure: str
+) -> None:
+    """Deshace la transacción y devuelve el documento a la cola, o lo da por FAILED."""
+    session.rollback()
+    session.refresh(document)
+    if document.attempts >= max_attempts:
+        document.transition_to(DocumentStatus.FAILED, error_summary=failure)
+    else:
+        document.transition_to(DocumentStatus.UPLOADED)
+        document.error_summary = retry
+    session.commit()
 
 
 def run_once(
@@ -121,6 +157,7 @@ def run_once(
     storage: FileStorage,
     *,
     policy: ChunkPolicy,
+    embedder: EmbeddingProvider,
     lease_seconds: int,
     max_attempts: int,
     now: datetime | None = None,
@@ -129,5 +166,5 @@ def run_once(
     document = claim_next(session, lease_seconds=lease_seconds, max_attempts=max_attempts, now=now)
     if document is None:
         return False
-    process(session, storage, document, policy=policy, max_attempts=max_attempts)
+    process(session, storage, document, policy=policy, embedder=embedder, max_attempts=max_attempts)
     return True
