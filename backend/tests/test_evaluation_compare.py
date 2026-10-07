@@ -61,7 +61,7 @@ class TestComparison:
         assert {k: v for k, v in base["config"].items() if k != "rerank"} == {
             k: v for k, v in cand["config"].items() if k != "rerank"
         }
-        assert report["dataset"]["questions"] == 28
+        assert report["dataset"]["questions"] == 32
 
     def test_deltas_are_candidate_minus_baseline_and_flagged_by_direction(
         self, db_session: Session
@@ -82,7 +82,7 @@ class TestComparison:
     def test_it_counts_the_questions_that_change(self, db_session: Session) -> None:
         questions = run(db_session).to_dict(include_timing=False)["questions"]
         counts = questions["retrieval"]
-        assert counts["improved"] + counts["worsened"] + counts["unchanged"] == 22
+        assert counts["improved"] + counts["worsened"] + counts["unchanged"] == 24
         assert counts["improved"] + counts["worsened"] == len(questions["retrieval_changes"])
         for item in questions["retrieval_changes"]:
             assert item["recall"][0] != item["recall"][1] or (
@@ -103,7 +103,7 @@ class TestComparison:
         comparison = compare_configs(db_session, BASE, RERANKED, provider(), repeats=2)
         timing = comparison.to_dict()["timing"]
         assert timing["repeats"] == 2
-        assert timing["samples_per_arm"] == 2 * 28
+        assert timing["samples_per_arm"] == 2 * 32
         assert (
             timing["baseline"]["retrieval_ms"]["p95"] >= timing["baseline"]["retrieval_ms"]["p50"]
         )

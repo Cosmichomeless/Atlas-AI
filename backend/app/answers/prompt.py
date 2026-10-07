@@ -36,14 +36,15 @@ empiece por "{EXTERNAL_MARKER}" y sin etiqueta. Nunca lo presentes como contenid
 
 PROMPT_FINGERPRINT = hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()[:12]
 
-_CLOSING_TAG = re.compile(re.escape(SOURCES_CLOSE), re.IGNORECASE)
+# Cualquier forma de cerrar el bloque, también con espacios (`</ fuentes >`) o en mayúsculas.
+_CLOSING_TAG = re.compile(r"<\s*/\s*fuentes\s*>", re.IGNORECASE)
 
 
 def build_messages(question: str, context: BoundedContext) -> list[Message]:
     """Conversación enviada al modelo: reglas, fuentes delimitadas y pregunta.
 
     El texto de los documentos no puede cerrar el bloque de fuentes: se neutraliza cualquier
-    `</fuentes>` que contenga.
+    `</fuentes>` que contenga, con o sin espacios y en cualquier combinación de mayúsculas.
     """
     sources = _CLOSING_TAG.sub("</ fuentes>", context.text)
     user = f"{SOURCES_OPEN}\n{sources}\n{SOURCES_CLOSE}\n\nPregunta: {question}"

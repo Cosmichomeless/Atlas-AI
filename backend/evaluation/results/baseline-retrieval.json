@@ -21,38 +21,38 @@
     "top_k": 5
   },
   "dataset": {
-    "content_sha256": "63b4e926e4058a42b1432132fd8b61a2d17b29c9705e1d73d5ce4d7f5902645c",
-    "key": "atlas-qa@1.0.0",
+    "content_sha256": "3b8524dd60f37afad46a9fc87940d18f18e4ef0a8e1882f7d43fafd80371a511",
+    "key": "atlas-qa@1.1.0",
     "name": "atlas-qa",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "metrics": {
     "ambiguous": {
-      "mrr": 0.533333,
-      "precision": 0.233333,
+      "mrr": 0.375,
+      "precision": 0.166667,
       "questions": 6,
-      "recall": 0.722222,
-      "source_success": 1.0
+      "recall": 0.583333,
+      "source_success": 0.833333
     },
     "answerable": {
-      "mrr": 0.741667,
-      "precision": 0.1875,
-      "questions": 16,
-      "recall": 0.9375,
+      "mrr": 0.673148,
+      "precision": 0.177778,
+      "questions": 18,
+      "recall": 0.888889,
       "source_success": 1.0
     },
     "overall": {
-      "mrr": 0.684848,
-      "precision": 0.2,
-      "questions": 22,
-      "recall": 0.878788,
-      "source_success": 1.0
+      "mrr": 0.598611,
+      "precision": 0.175,
+      "questions": 24,
+      "recall": 0.8125,
+      "source_success": 0.958333
     },
     "unanswerable": {
       "min_score": 0.0,
-      "questions": 6,
-      "top_score_max": 0.513892,
-      "top_score_mean": 0.378664,
+      "questions": 8,
+      "top_score_max": 0.541083,
+      "top_score_mean": 0.416489,
       "with_hits_rate": 1.0
     }
   },
@@ -64,6 +64,12 @@
           "ordinal": 5,
           "relevant": false,
           "score": 0.301511
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.300669
         },
         {
           "document": "politica-teletrabajo.md",
@@ -78,23 +84,17 @@
           "score": 0.220479
         },
         {
-          "document": "guia-gastos.md",
-          "ordinal": 5,
+          "document": "comunicado-proveedores.md",
+          "ordinal": 0,
           "relevant": false,
-          "score": 0.197028
-        },
-        {
-          "document": "guia-gastos.md",
-          "ordinal": 4,
-          "relevant": false,
-          "score": 0.188982
+          "score": 0.218218
         }
       ],
       "id": "q001",
       "kind": "answerable",
       "precision": 0.2,
       "recall": 1.0,
-      "reciprocal_rank": 0.5,
+      "reciprocal_rank": 0.333333,
       "source_success": 1.0,
       "top_score": 0.301511
     },
@@ -105,6 +105,12 @@
           "ordinal": 5,
           "relevant": false,
           "score": 0.322329
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.28125
         },
         {
           "document": "guia-gastos.md",
@@ -123,19 +129,13 @@
           "ordinal": 5,
           "relevant": false,
           "score": 0.221163
-        },
-        {
-          "document": "guia-incidentes.md",
-          "ordinal": 1,
-          "relevant": false,
-          "score": 0.178145
         }
       ],
       "id": "q002",
       "kind": "answerable",
       "precision": 0.2,
       "recall": 1.0,
-      "reciprocal_rank": 0.333333,
+      "reciprocal_rank": 0.25,
       "source_success": 1.0,
       "top_score": 0.322329
     },
@@ -166,10 +166,10 @@
           "score": 0.378714
         },
         {
-          "document": "guia-incidentes.md",
-          "ordinal": 1,
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
           "relevant": false,
-          "score": 0.33939
+          "score": 0.367718
         }
       ],
       "id": "q003",
@@ -283,16 +283,16 @@
           "score": 0.328976
         },
         {
-          "document": "guia-gastos.md",
-          "ordinal": 4,
+          "document": "comunicado-proveedores.md",
+          "ordinal": 1,
           "relevant": false,
-          "score": 0.288675
+          "score": 0.306413
         },
         {
-          "document": "politica-teletrabajo.md",
+          "document": "aviso-mantenimiento.md",
           "ordinal": 2,
           "relevant": false,
-          "score": 0.246461
+          "score": 0.306186
         }
       ],
       "id": "q006",
@@ -365,16 +365,16 @@
           "score": 0.575224
         },
         {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.493058
+        },
+        {
           "document": "politica-teletrabajo.md",
           "ordinal": 3,
           "relevant": false,
           "score": 0.48293
-        },
-        {
-          "document": "politica-teletrabajo.md",
-          "ordinal": 2,
-          "relevant": false,
-          "score": 0.432962
         }
       ],
       "id": "q008",
@@ -412,10 +412,10 @@
           "score": 0.436365
         },
         {
-          "document": "normas-seguridad.md",
+          "document": "aviso-mantenimiento.md",
           "ordinal": 2,
           "relevant": false,
-          "score": 0.349927
+          "score": 0.382733
         }
       ],
       "id": "q009",
@@ -441,6 +441,12 @@
           "score": 0.426401
         },
         {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.401587
+        },
+        {
           "document": "guia-incidentes.md",
           "ordinal": 2,
           "relevant": false,
@@ -451,12 +457,6 @@
           "ordinal": 5,
           "relevant": false,
           "score": 0.390095
-        },
-        {
-          "document": "guia-gastos.md",
-          "ordinal": 4,
-          "relevant": false,
-          "score": 0.374166
         }
       ],
       "id": "q010",
@@ -605,6 +605,12 @@
           "score": 0.313732
         },
         {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.304165
+        },
+        {
           "document": "guia-gastos.md",
           "ordinal": 3,
           "relevant": false,
@@ -615,12 +621,6 @@
           "ordinal": 5,
           "relevant": false,
           "score": 0.263101
-        },
-        {
-          "document": "politica-teletrabajo.md",
-          "ordinal": 3,
-          "relevant": false,
-          "score": 0.258857
         }
       ],
       "id": "q014",
@@ -716,6 +716,88 @@
     {
       "hits": [
         {
+          "document": "comunicado-proveedores.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.3849
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.341882
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.303895
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.294628
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.266667
+        }
+      ],
+      "id": "q017",
+      "kind": "answerable",
+      "precision": 0.0,
+      "recall": 0.0,
+      "reciprocal_rank": 0.0,
+      "source_success": 1.0,
+      "top_score": 0.3849
+    },
+    {
+      "hits": [
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.53936
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 1,
+          "relevant": true,
+          "score": 0.520157
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.399751
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.393611
+        },
+        {
+          "document": "comunicado-proveedores.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.369274
+        }
+      ],
+      "id": "q018",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "source_success": 1.0,
+      "top_score": 0.53936
+    },
+    {
+      "hits": [
+        {
           "document": "guia-gastos.md",
           "ordinal": 2,
           "relevant": true,
@@ -763,6 +845,12 @@
           "score": 0.194625
         },
         {
+          "document": "comunicado-proveedores.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.177123
+        },
+        {
           "document": "normas-seguridad.md",
           "ordinal": 1,
           "relevant": false,
@@ -775,23 +863,17 @@
           "score": 0.163299
         },
         {
-          "document": "normas-seguridad.md",
-          "ordinal": 5,
-          "relevant": true,
-          "score": 0.139573
-        },
-        {
-          "document": "politica-teletrabajo.md",
-          "ordinal": 4,
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
           "relevant": false,
-          "score": 0.13525
+          "score": 0.144338
         }
       ],
       "id": "a002",
       "kind": "ambiguous",
-      "precision": 0.2,
-      "recall": 0.333333,
-      "reciprocal_rank": 0.25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "reciprocal_rank": 0.0,
       "source_success": 1.0,
       "top_score": 0.194625
     },
@@ -839,10 +921,22 @@
     {
       "hits": [
         {
+          "document": "comunicado-proveedores.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.218218
+        },
+        {
           "document": "guia-incidentes.md",
           "ordinal": 2,
           "relevant": true,
           "score": 0.201853
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.167038
         },
         {
           "document": "guia-gastos.md",
@@ -851,31 +945,19 @@
           "score": 0.157485
         },
         {
-          "document": "normas-seguridad.md",
-          "ordinal": 5,
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 1,
           "relevant": false,
-          "score": 0.129219
-        },
-        {
-          "document": "normas-seguridad.md",
-          "ordinal": 4,
-          "relevant": false,
-          "score": 0.126872
-        },
-        {
-          "document": "guia-incidentes.md",
-          "ordinal": 0,
-          "relevant": false,
-          "score": 0.125988
+          "score": 0.13041
         }
       ],
       "id": "a004",
       "kind": "ambiguous",
       "precision": 0.2,
       "recall": 0.5,
-      "reciprocal_rank": 1.0,
+      "reciprocal_rank": 0.5,
       "source_success": 1.0,
-      "top_score": 0.201853
+      "top_score": 0.218218
     },
     {
       "hits": [
@@ -945,18 +1027,18 @@
           "score": 0.160644
         },
         {
-          "document": "guia-gastos.md",
-          "ordinal": 2,
-          "relevant": true,
-          "score": 0.127775
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.138013
         }
       ],
       "id": "a006",
       "kind": "ambiguous",
-      "precision": 0.2,
-      "recall": 0.5,
-      "reciprocal_rank": 0.2,
-      "source_success": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "reciprocal_rank": 0.0,
+      "source_success": 0.0,
       "top_score": 0.238366
     },
     {
@@ -1179,6 +1261,12 @@
           "score": 0.408248
         },
         {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.396928
+        },
+        {
           "document": "politica-teletrabajo.md",
           "ordinal": 2,
           "relevant": false,
@@ -1189,12 +1277,6 @@
           "ordinal": 2,
           "relevant": false,
           "score": 0.363376
-        },
-        {
-          "document": "guia-incidentes.md",
-          "ordinal": 4,
-          "relevant": false,
-          "score": 0.355023
         }
       ],
       "id": "u006",
@@ -1204,6 +1286,88 @@
       "reciprocal_rank": null,
       "source_success": null,
       "top_score": 0.411409
+    },
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.541083
+        },
+        {
+          "document": "comunicado-proveedores.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.504101
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.498888
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.462706
+        },
+        {
+          "document": "comunicado-proveedores.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.442719
+        }
+      ],
+      "id": "u007",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.541083
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.518851
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.487316
+        },
+        {
+          "document": "aviso-mantenimiento.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.436931
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.435924
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.434065
+        }
+      ],
+      "id": "u008",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.518851
     }
   ],
   "schema": 1

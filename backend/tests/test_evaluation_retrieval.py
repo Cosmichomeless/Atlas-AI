@@ -147,9 +147,9 @@ class TestExperiment:
         dataset = load_dataset()
         report = run_retrieval_eval(db_session, config(top_k=4, min_score=0.1), dataset).to_dict()
         assert report["dataset"] == {
-            "key": "atlas-qa@1.0.0",
+            "key": "atlas-qa@1.1.0",
             "name": "atlas-qa",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "content_sha256": dataset.manifest.content_sha256,
         }
         assert report["config"]["embedding"] == {
@@ -194,7 +194,7 @@ class TestExperiment:
         metrics = run_retrieval_eval(db_session, config(top_k=5)).metrics
         assert metrics["overall"]["source_success"] >= 0.8
         assert metrics["answerable"]["recall"] >= 0.6
-        assert metrics["unanswerable"]["questions"] == 6
+        assert metrics["unanswerable"]["questions"] == 8
 
     def test_it_leaves_no_trace(self, db_session: Session) -> None:
         before = [

@@ -78,6 +78,7 @@ METRICS: tuple[tuple[str, tuple[str, ...], bool], ...] = (
     ("answers", ("valid_abstention_rate",), True),
     ("answers", ("unnecessary_abstention_rate",), False),
     ("answers", ("hallucination_rate",), False),
+    ("answers", ("injection_rate",), False),
 )
 
 

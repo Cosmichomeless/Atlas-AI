@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from app.answers.tokens import estimate_tokens
+from app.answers.untrusted import redact_instructions
 from app.embeddings.store import SimilarChunk
 
 FILENAME_MAX_CHARS = 80
@@ -43,6 +44,8 @@ class ContextItem:
     end_line: int | None
     score: float
     text: str
+    redacted: int = 0
+    """Párrafos omitidos por tener forma de orden al asistente (ver `untrusted`)."""
 
     @property
     def reference(self) -> str:
@@ -64,6 +67,7 @@ class ContextItem:
     @classmethod
     def from_hit(cls, label: str, hit: SimilarChunk) -> "ContextItem":
         chunk, document = hit.chunk, hit.document
+        text, redacted = redact_instructions(chunk.text)
         return cls(
             label=label,
             chunk_id=chunk.id,
@@ -75,7 +79,8 @@ class ContextItem:
             start_line=chunk.start_line,
             end_line=chunk.end_line,
             score=hit.score,
-            text=chunk.text,
+            text=text,
+            redacted=redacted,
         )
 
 

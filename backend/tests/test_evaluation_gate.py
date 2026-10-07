@@ -29,7 +29,7 @@ from app.llm.provider import Message
 VALID: dict[str, Any] = {
     "schema": 1,
     "dataset": "atlas-qa-v1",
-    "dataset_key": "atlas-qa@1.0.0",
+    "dataset_key": "atlas-qa@1.1.0",
     "config": {
         "chunk_size": 1000,
         "chunk_overlap": 150,
