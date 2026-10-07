@@ -91,6 +91,19 @@ class Settings(BaseSettings):
         default=50, ge=1, description="Máximo de documentos que una búsqueda puede seleccionar."
     )
 
+    search_dedup_overlap: float = Field(
+        default=0.5,
+        gt=0,
+        le=1,
+        description="Solape (0-1] a partir del cual un fragmento contiguo se considera repetido.",
+    )
+    search_dedup_window: int = Field(
+        default=1, ge=0, description="Distancia máxima de ordinal para considerar contiguos."
+    )
+    search_overfetch: int = Field(
+        default=3, ge=1, description="Candidatos pedidos por cada resultado antes de reducir."
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)
