@@ -5,6 +5,8 @@ from typing import Literal, Self
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.answers.tokens import min_context_tokens
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 Environment = Literal["development", "test", "production"]
@@ -104,6 +106,12 @@ class Settings(BaseSettings):
         default=3, ge=1, description="Candidatos pedidos por cada resultado antes de reducir."
     )
 
+    answer_context_max_tokens: int = Field(
+        default=3000,
+        ge=1,
+        description="Tokens (estimados) que puede ocupar el contexto enviado al modelo.",
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)
@@ -141,6 +149,11 @@ class Settings(BaseSettings):
             raise ValueError("SEARCH_DEFAULT_K no puede superar SEARCH_MAX_K")
         if self.chunk_overlap_chars > self.chunk_size_chars // 2:
             raise ValueError("CHUNK_OVERLAP_CHARS no puede superar la mitad de CHUNK_SIZE_CHARS")
+        if self.answer_context_max_tokens < min_context_tokens(self.chunk_size_chars):
+            raise ValueError(
+                "ANSWER_CONTEXT_MAX_TOKENS debe bastar para un fragmento de CHUNK_SIZE_CHARS "
+                f"(al menos {min_context_tokens(self.chunk_size_chars)})"
+            )
         if self.cookie_samesite == "none" and not self.session_cookie_secure:
             raise ValueError("COOKIE_SAMESITE=none requiere cookies Secure")
         if self.app_env == "production":

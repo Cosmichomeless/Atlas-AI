@@ -368,6 +368,25 @@ the API, processed by the ingestion worker and queried through `POST /api/v1/sea
   the SQL actually sent to Postgres is captured to prove it filters by the user's id. Removing the
   `owner_id` condition from the query turns ten of these tests red.
 
+### Bounded context
+
+`app/answers/context.py` turns the retrieved chunks into the context sent to the model, within an explicit
+token budget (`ANSWER_CONTEXT_MAX_TOKENS`, default 3000; startup fails if it cannot hold one full
+`CHUNK_SIZE_CHARS` chunk plus its header).
+
+- `build_context(hits, max_tokens=...)` walks the hits in relevance order and keeps those that fit. Chunk text is
+  never cut: a fragment goes in whole or is left out (reported in `omitted` as `over_budget`), and later,
+  shorter fragments are still tried. The same chunk never enters twice (`duplicate`).
+- Each `ContextItem` keeps `chunk_id`, `document_id`, filename, `page`, `section`, lines, `ordinal` and score, and
+  gets a stable label (`S1`, `S2`…, by relevance) the model uses to cite it. The text sent is
+  `[S1] informe.pdf — p. 3 — Section > Sub` followed by the chunk; header fields are flattened to one line and
+  clipped, so a filename cannot forge a label.
+- The limit is checked on the final rendered text: `context.tokens <= max_tokens` always holds. Tokens are
+  estimated (`app/answers/tokens.py`, ~3 characters per token, never fewer than the word count) so no tokenizer
+  dependency is needed; the estimate is deliberately pessimistic. The budget covers the context only; the
+  instructions, the question and `LLM_MAX_OUTPUT_TOKENS` are on top of it.
+- An empty context (no hits, or nothing fits) is a valid result; what to do with it belongs to the abstention step.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
