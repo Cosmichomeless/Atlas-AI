@@ -259,3 +259,10 @@ def test_invariants_hold_for_random_documents(seed: int) -> None:
 
 def _collapse(values: Iterable[int | None]) -> list[int | None]:
     return [value for value, _ in itertools.groupby(values)]
+
+
+def test_a_chunk_ending_with_its_block_reports_the_blocks_last_line() -> None:
+    # El bloque omite la línea en blanco entre el título y el párrafo (líneas 1 a 3)
+    result = chunk_blocks([block("# Guía\nIntro.", start_line=1, end_line=3)], SMALL)
+
+    assert [(c.start_line, c.end_line) for c in result] == [(1, 3)]

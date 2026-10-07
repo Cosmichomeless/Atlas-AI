@@ -210,6 +210,10 @@ chunks)` is the only writer.
   anything fails the transaction rolls back and the previous chunks stay. A document that ends `FAILED`
   (no text any more) keeps no stale chunks.
 - The owner is not copied into the chunks: retrieval joins `documents` and filters by `owner_id`.
+- `tests/test_index_integrity.py` checks all of this against real PostgreSQL: known PDF and Markdown samples keep
+  their pages, sections, line ranges and order; each vector is the one computed from its chunk; and after
+  reprocessing, deleting, or failing midway (provider error, crash before commit, dead worker) a global check
+  finds contiguous ordinals, no orphan chunks or vectors and at most one vector per chunk and spec.
 
 ### Embedding provider
 
