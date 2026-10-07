@@ -368,6 +368,25 @@ the API, processed by the ingestion worker and queried through `POST /api/v1/sea
   the SQL actually sent to Postgres is captured to prove it filters by the user's id. Removing the
   `owner_id` condition from the query turns ten of these tests red.
 
+### Evaluation dataset
+
+`evaluation/datasets/atlas-qa-v1/` is the versioned question-answer dataset the evaluation commands run
+on (Spanish, synthetic, MIT like the repository). It holds four documents of a fictional company and 28
+annotated questions: 16 **answerable**, 6 **ambiguous** (each with its own readings and evidence) and 6
+**unanswerable** (missing topic, near-topic missing fact, out of domain). The annotation criteria are in
+`ANNOTATION.md`; usage and licence are in `README.md` and `manifest.json`.
+
+- **Versioned.** `manifest.json` declares a semantic version, the licence and intended use, the question
+  counts and a SHA-256 of `documents/` and `questions.json`. Loading fails if the content changed without
+  sealing a new hash, so every result can be tied to exact data. Results are only comparable within the
+  same major version.
+- **Validated.** Every `evidence.quote` must appear literally in its document, every `key_facts` entry
+  must appear in its evidence, ids and questions are unique and all three kinds must be present.
+  `uv run python -m app.evaluation.dataset` validates it and prints a summary; problems are listed all at
+  once.
+- **Limits.** One annotator, no inter-annotator agreement measured, one domain. It detects regressions and
+  compares configurations; it does not say how well the system does on real documents.
+
 ### Bounded context
 
 `app/answers/context.py` turns the retrieved chunks into the context sent to the model, within an explicit
