@@ -170,6 +170,32 @@ give the same chunks. Configuration (in characters, validated at startup):
   spaces is cut mid-word.
 - No empty chunks are emitted and `ordinal` follows document order (0, 1, 2…).
 
+### Reindexing
+
+Changing the embedding model, its adapter `version`, the chunk size/overlap or the chunker itself
+(`CHUNKER_VERSION` in `app/ingestion/chunking.py`) leaves earlier documents indexed with something else.
+Each `READY` document remembers how it was indexed (`documents.index_embedding` = `EmbeddingSpec.key`,
+`documents.index_chunking` = `ChunkPolicy.key`; both are cleared in any other state and are never exposed by the
+API). A `READY` document whose fingerprint differs from the current configuration is **stale**, and so is one with
+no fingerprint (it predates the column).
+
+```bash
+uv run python -m app.ingestion.reindex --dry-run   # from backend/: counts only, changes nothing
+uv run python -m app.ingestion.reindex             # queues the stale documents; the worker does the rest
+```
+
+- Reindexing never rewrites vectors itself: it moves stale documents `READY → UPLOADED`, resets `attempts` (they
+  belong to the previous pass) and clears the error. The worker then reprocesses them like any upload.
+- Old and new are never mixed: `replace_chunks` swaps chunks and vectors in the same transaction that sets
+  `READY`, so a document always has one complete index of one version. If the provider fails midway the previous
+  index survives untouched and the document retries. Retrieval only compares vectors of the query's spec, so during
+  a partial rollout migrated documents answer with the new model and the rest wait their turn.
+- Idempotent: queued documents are no longer `READY`, so a second run finds nothing (`0 documents queued`) and a
+  finished run leaves no duplicate chunks or vectors. `FAILED` and already queued documents are left alone;
+  documents locked by another process (being deleted) are skipped and picked up by the next run.
+- `index_coverage()` returns how many documents are current, stale, pending (`UPLOADED`/`PROCESSING`) and failed;
+  `request_reindex(owner_id=...)` can be limited to one owner.
+
 ### Persisted chunks
 
 `app/ingestion/chunk_store.py` stores the chunks in `document_chunks`; `replace_chunks(session, document_id,

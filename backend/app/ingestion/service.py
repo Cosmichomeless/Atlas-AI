@@ -114,7 +114,11 @@ def process(
             if chunks:
                 _index_chunks(session, document, embedder)
                 logger.info("Documento %s: %d fragmentos indexados", document.id, len(chunks))
-                document.transition_to(DocumentStatus.READY)
+                document.transition_to(
+                    DocumentStatus.READY,
+                    index_embedding=embedder.spec.key,
+                    index_chunking=policy.key,
+                )
             else:
                 document.transition_to(DocumentStatus.FAILED, error_summary=NO_TEXT)
         session.commit()
