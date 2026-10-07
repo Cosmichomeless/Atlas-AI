@@ -154,7 +154,7 @@ def test_limits_come_from_the_settings() -> None:
         search_min_score=0.25,
     )
 
-    assert SearchLimits.from_settings(settings) == SearchLimits(2, 7, 0.25)
+    assert SearchLimits.from_settings(settings) == SearchLimits(2, 7, 0.25, 50)
 
 
 def test_a_default_k_above_the_maximum_is_a_configuration_error() -> None:

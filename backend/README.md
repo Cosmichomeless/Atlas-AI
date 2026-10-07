@@ -280,6 +280,14 @@ chosen by `EMBEDDING_PROVIDER` through `get_embedding_provider()`:
 | `SEARCH_DEFAULT_K` | 5 | Results when `k` is not given (cannot exceed the maximum) |
 | `SEARCH_MAX_K` | 20 | Largest `k` a caller may ask for |
 | `SEARCH_MIN_SCORE` | 0.0 (0 to 1) | Default similarity threshold; weaker matches are dropped inside the query |
+| `SEARCH_MAX_DOCUMENTS` | 50 | Most documents a single search may select |
+
+**Scope.** The owner filter is part of the SQL query, never applied afterwards. `document_ids` narrows the
+search to a selection, also inside the query, so `k` is applied to the already-filtered rows (a better
+match in an unselected document cannot push a selected one out). Ids that are foreign or do not exist are
+indistinguishable: they match nothing and raise no error, so a document's existence is never revealed. An
+empty selection searches nothing (it never means "all"); duplicates count once; more than
+`SEARCH_MAX_DOCUMENTS` ids raises `InvalidSearchError` (`too_many_documents`).
 
 ### File storage
 
