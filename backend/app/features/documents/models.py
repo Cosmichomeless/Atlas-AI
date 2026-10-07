@@ -2,7 +2,17 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    Enum,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.core.base import Base
@@ -109,3 +119,39 @@ class Document(Base):
                 self.processing_started_at = None
                 self.processed_at = None
                 self.lease_expires_at = None
+
+
+class DocumentChunk(Base):
+    """Fragmento de texto de un documento, con lo necesario para citarlo y localizarlo.
+
+    Cada fragmento se rastrea hasta el original por `document_id` (y su `storage_key`) más su
+    procedencia: `page` en PDF, `section` y `start_line`/`end_line` en texto y Markdown. El
+    propietario no se copia aquí: se obtiene del documento, así no puede quedar incoherente.
+    `ordinal` (0, 1, 2…) es la posición en el documento; borrar el documento borra sus fragmentos.
+    """
+
+    __tablename__ = "document_chunks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "ordinal"),
+        CheckConstraint("ordinal >= 0", name="ordinal_non_negative"),
+        CheckConstraint("length(btrim(text)) > 0", name="text_not_blank"),
+        CheckConstraint("page IS NULL OR page >= 1", name="page_positive"),
+        CheckConstraint(
+            "(start_line IS NULL AND end_line IS NULL)"
+            " OR (start_line IS NOT NULL AND end_line IS NOT NULL"
+            " AND start_line >= 1 AND end_line >= start_line)",
+            name="lines_valid",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    ordinal: Mapped[int] = mapped_column(nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    page: Mapped[int | None] = mapped_column()
+    section: Mapped[str | None] = mapped_column(Text)
+    start_line: Mapped[int | None] = mapped_column()
+    end_line: Mapped[int | None] = mapped_column()
+    created_at: Mapped[datetime] = created_at_column()

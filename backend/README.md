@@ -155,6 +155,21 @@ give the same chunks. Configuration (in characters, validated at startup):
   spaces is cut mid-word.
 - No empty chunks are emitted and `ordinal` follows document order (0, 1, 2…).
 
+### Persisted chunks
+
+`app/ingestion/chunk_store.py` stores the chunks in `document_chunks`; `replace_chunks(session, document_id,
+chunks)` is the only writer.
+
+- Each row keeps its provenance: `document_id` (FK, `ON DELETE CASCADE`), `ordinal`, `text`, and the optional
+  `page`, `section`, `start_line`/`end_line` copied from the extracted blocks, so any chunk can be traced back to
+  the original (`documents.storage_key`). `CHECK`s reject blank text, negative ordinals, `page < 1` and
+  half-filled or inverted line ranges; `(document_id, ordinal)` is unique.
+- Reprocessing replaces: the worker deletes the document's old chunks and inserts the new ones in the same
+  transaction that sets the final status, so there are never duplicates or a mix of old and new content. If
+  anything fails the transaction rolls back and the previous chunks stay. A document that ends `FAILED`
+  (no text any more) keeps no stale chunks.
+- The owner is not copied into the chunks: retrieval joins `documents` and filters by `owner_id`.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
@@ -231,6 +246,8 @@ Models inherit from `app.core.base.Base` (deterministic constraint naming) and m
   can only be born `UPLOADED`. Use `document.transition_to(status, error_summary=..., lease_expires_at=...)`:
   it records dates, increments `attempts` on `PROCESSING`, requires an error summary for `FAILED` and clears
   the lease when leaving `PROCESSING`.
+- `document_chunks` — UUID id, `document_id` (`NOT NULL`, FK to `documents`, `ON DELETE CASCADE`, indexed),
+  `ordinal` (unique per document), `text`, optional `page`, `section`, `start_line`, `end_line`, `created_at`.
 - Always query documents through `app.features.documents.queries` (`list_owned_page`, `get_owned`): they
   require the owner id, and a foreign or missing id both return `None`.
 
