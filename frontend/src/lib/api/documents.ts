@@ -26,3 +26,14 @@ export function deleteDocument(id: string): Promise<void> {
 export function listReadyDocuments(): Promise<DocumentList> {
   return unwrap(api.GET("/api/v1/documents", { params: { query: { limit: 100, offset: 0, status: "READY" } } }));
 }
+
+export type DocumentPassage = components["schemas"]["DocumentPassage"];
+
+/** Texto original y ubicación del fragmento que respalda una cita. */
+export function getPassage(documentId: string, chunkId: string): Promise<DocumentPassage> {
+  return unwrap(
+    api.GET("/api/v1/documents/{document_id}/chunks/{chunk_id}", {
+      params: { path: { document_id: documentId, chunk_id: chunkId } },
+    }),
+  );
+}

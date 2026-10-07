@@ -189,6 +189,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/{document_id}/chunks/{chunk_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver el pasaje original de una cita
+         * @description Texto y ubicación del fragmento que respalda una cita.
+         *
+         *     Un documento o fragmento inexistente, borrado, reindexado o ajeno devuelve el mismo 404.
+         */
+        get: operations["get_passage_api_v1_documents__document_id__chunks__chunk_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -337,6 +359,39 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /**
+         * DocumentPassage
+         * @description Pasaje original de un documento: lo que una cita señala, con su ubicación.
+         */
+        DocumentPassage: {
+            /**
+             * Chunk Id
+             * Format: uuid
+             */
+            chunk_id: string;
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Ordinal
+             * @description Posición del fragmento dentro del documento.
+             */
+            ordinal: number;
+            /** Text */
+            text: string;
+            /** Page */
+            page: number | null;
+            /** Section */
+            section: string | null;
+            /** Start Line */
+            start_line: number | null;
+            /** End Line */
+            end_line: number | null;
         };
         /**
          * DocumentStatus
@@ -1270,6 +1325,74 @@ export interface operations {
             };
             /** @description La solicitud entra en conflicto con el estado actual del recurso. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Los datos enviados no son válidos. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error interno del servidor. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_passage_api_v1_documents__document_id__chunks__chunk_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                chunk_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentPassage"];
+                };
+            };
+            /** @description Autenticación requerida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tienes permiso para realizar esta acción. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Recurso no encontrado. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

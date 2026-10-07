@@ -48,6 +48,20 @@ class DocumentDetail(DocumentSummary):
     processed_at: datetime | None
 
 
+class DocumentPassage(BaseModel):
+    """Pasaje original de un documento: lo que una cita señala, con su ubicación."""
+
+    chunk_id: uuid.UUID
+    document_id: uuid.UUID
+    filename: str
+    ordinal: int = Field(description="Posición del fragmento dentro del documento.")
+    text: str
+    page: int | None
+    section: str | None
+    start_line: int | None
+    end_line: int | None
+
+
 class DocumentList(BaseModel):
     items: list[DocumentSummary]
     total: int = Field(description="Documentos que cumplen el filtro, sin paginar.")
@@ -86,6 +100,35 @@ def get_document(document_id: uuid.UUID, user: CurrentUser, session: SessionDep)
     if document is None:
         raise AppError(404, "document_not_found", "Documento no encontrado.")
     return DocumentDetail.model_validate(document)
+
+
+@router.get(
+    "/{document_id}/chunks/{chunk_id}",
+    summary="Ver el pasaje original de una cita",
+    responses=error_responses(404, 422),
+)
+def get_passage(
+    document_id: uuid.UUID, chunk_id: uuid.UUID, user: CurrentUser, session: SessionDep
+) -> DocumentPassage:
+    """Texto y ubicación del fragmento que respalda una cita.
+
+    Un documento o fragmento inexistente, borrado, reindexado o ajeno devuelve el mismo 404.
+    """
+    found = queries.get_owned_chunk(session, user.id, document_id, chunk_id)
+    if found is None:
+        raise AppError(404, "passage_not_found", "El pasaje ya no está disponible.")
+    document, chunk = found
+    return DocumentPassage(
+        chunk_id=chunk.id,
+        document_id=document.id,
+        filename=document.filename,
+        ordinal=chunk.ordinal,
+        text=chunk.text,
+        page=chunk.page,
+        section=chunk.section,
+        start_line=chunk.start_line,
+        end_line=chunk.end_line,
+    )
 
 
 @router.post(

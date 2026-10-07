@@ -16,6 +16,7 @@ import {
   describeQuestionError,
 } from "@/lib/questions/messages";
 
+import { CitationSource } from "./citation-source";
 import styles from "./question-view.module.css";
 
 type Outcome = { kind: "result"; value: QuestionResponse } | { kind: "error"; message: string };
@@ -183,13 +184,11 @@ function Result({ response }: { response: QuestionResponse }) {
       {response.citations.length > 0 && (
         <>
           <h3>Fuentes</h3>
+          <p className={styles.notice}>Pulsa una fuente para ver el pasaje original.</p>
           <ul className={styles.sources}>
             {response.citations.map((citation) => (
               <li key={citation.chunk_id}>
-                <span className={styles.label}>[{citation.label}]</span>
-                {citation.filename}
-                {citation.page !== null && `, p. ${citation.page}`}
-                {citation.section && `, ${citation.section}`}
+                <CitationSource citation={citation} />
               </li>
             ))}
           </ul>
