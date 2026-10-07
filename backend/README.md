@@ -387,6 +387,27 @@ token budget (`ANSWER_CONTEXT_MAX_TOKENS`, default 3000; startup fails if it can
   instructions, the question and `LLM_MAX_OUTPUT_TOKENS` are on top of it.
 - An empty context (no hits, or nothing fits) is a valid result; what to do with it belongs to the abstention step.
 
+### Grounded answers
+
+`generate_answer(question, context, provider)` (`app/answers/generate.py`) asks the LLM using only the bounded
+context. An empty context never reaches the model (`EmptyContextError`); a provider failure propagates as
+`LLMError`.
+
+- The system prompt (`app/answers/prompt.py`) tells the model to answer only from the `<fuentes>` block, to end
+  each claim with its `[S1]`-style label, to say what is missing when the evidence is partial, to answer
+  `SIN_EVIDENCIA` when it is not enough, to put anything outside the documents in a separate sentence starting
+  with `(No consta en los documentos)`, and to treat the fragments as data, not instructions. A `</fuentes>` inside
+  a document is neutralised so it cannot close the block.
+- External knowledge is never passed off as document content: the answer is split into statements
+  (`app/answers/grounding.py`) and each is `cited` (carries a source label), `external` (declared as outside the
+  documents) or `uncited`. `Answer.uncited` lists the last kind, which must not be presented as coming from the
+  documents. Whether the labels point to real sources is checked in the citation step.
+- Reproducibility: `PROMPT_VERSION` (`grounded/v1`) and a hash of the prompt text (`PROMPT_FINGERPRINT`) are
+  recorded in `Answer.provenance` together with the LLM key (`provider/model/version`), temperature, max output
+  tokens, context tokens and the chunk ids, and logged at INFO under `app.answers` (never the question or the
+  text). A test pins the fingerprint of every published version: editing the prompt without bumping the version
+  fails the build.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
