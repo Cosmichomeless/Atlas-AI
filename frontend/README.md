@@ -19,7 +19,8 @@ Aplicación web en Next.js (App Router) y TypeScript.
 
 - `src/app/` — rutas, layouts y estilos globales (App Router).
 - `src/app/(public)/` — `/login` y `/register`. `src/app/(app)/` — rutas privadas (`/documents`…), envueltas en `PrivateShell`.
-- `src/components/` — componentes compartidos (`AuthForm`, `PrivateShell`).
+- `src/components/` — componentes compartidos (`AuthForm`, `PrivateShell`) y `documents/` (`DocumentLibrary`, `UploadForm`).
+- `src/lib/documents/` — reglas de validación de subida y etiquetas de estado.
 - `src/test/` — utilidades de test: `mockApi` (sustituye `fetch` por un servidor simulado) y doble de `next/navigation`.
 - `src/app/globals.css` — variables de diseño (colores, espaciado, tipografía) y soporte de tema claro/oscuro.
 
@@ -56,3 +57,20 @@ de sesión se pregunta al servidor.
 La redirección se hace en el cliente porque la cookie de sesión no es legible por el servidor de
 Next cuando la API vive en otro origen; **la autorización real es siempre la del backend** (cada
 endpoint exige sesión y filtra por propietario). El guard solo evita mostrar pantallas vacías.
+
+## Biblioteca de documentos
+
+`/documents` (dentro de `(app)/`) lista los documentos **del usuario en sesión**: el filtrado por
+propietario lo hace el backend, la web solo pinta lo que `GET /api/v1/documents` devuelve.
+
+- `DocumentLibrary` — lista paginada (20 por página, `limit`/`offset`), estado vacío, error de carga
+  con «Reintentar» y etiqueta de estado (En cola, Procesando, Listo, Falló). Al subir un documento
+  vuelve a la primera página; si una página queda vacía retrocede a la última que exista.
+- `UploadForm` — valida en el cliente la extensión (`.pdf`, `.txt`, `.md`, `.markdown`), que no esté
+  vacío y el máximo de 20 MB **antes** de enviar (`src/lib/documents/validation.ts`; la validación
+  real es la del servidor). Muestra barra de progreso, impide dobles envíos y enseña el mensaje del
+  servidor ante 413 / 415 / 422 o fallo de red; un error del servidor no bloquea reintentar.
+- `src/lib/api/upload.ts` — la subida usa `XMLHttpRequest` (y no `fetch`) porque `fetch` no informa
+  del progreso de envío. Reutiliza el mismo almacén de token CSRF que el cliente tipado
+  (`csrf` en `client.ts`) y reintenta una vez con un token nuevo si el servidor responde
+  `csrf_failed`. Admite `AbortSignal`.
