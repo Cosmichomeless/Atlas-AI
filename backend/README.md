@@ -374,6 +374,10 @@ section, start_line, end_line}`. Snippets are one line, at most 280 characters, 
 
 ### Retrieval evaluation
 
+> Methodology, published results (reproducible), false positives, biases and inference cost are written up in
+> [`docs/evaluation.md`](../docs/evaluation.md). Every figure comes from a report committed in
+> `evaluation/results/`, measured with the fake providers.
+
 `tests/test_retrieval_eval.py` checks retrieval end to end against a real Postgres: a small, known corpus
 (a text manual, a Markdown file with sections, a PDF with pages) owned by three users is uploaded through
 the API, processed by the ingestion worker and queried through `POST /api/v1/search`.
@@ -484,7 +488,9 @@ difference comes from the configuration, not from the indexing; configurations t
   decide, but are listed next to the decision.
 
 The result for the default settings is versioned in `evaluation/results/` (`rerank-comparison.json`,
-reproducible; `rerank-comparison.md`, readable, with the latency of the run that produced it). Regenerate it
+reproducible; `rerank-comparison.md`, readable, with the latency of the run that produced it) next to the
+baseline reports `baseline-retrieval.json` and `baseline-answers.json` (`--no-timing`, byte-for-byte
+reproducible). Regenerate the comparison
 against a throwaway database:
 
 ```bash

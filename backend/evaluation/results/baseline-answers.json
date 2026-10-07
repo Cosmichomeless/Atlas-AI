@@ -1,0 +1,489 @@
+{
+  "config": {
+    "chunking": {
+      "key": "v1:size=1000,overlap=150",
+      "overlap": 150,
+      "size": 1000
+    },
+    "dedup": {
+      "min_overlap": 0.5,
+      "overfetch": 3,
+      "window": 1
+    },
+    "embedding": {
+      "dimensions": 1536,
+      "key": "fake/text-embedding-3-small/1536/v1",
+      "model": "text-embedding-3-small",
+      "provider": "fake"
+    },
+    "llm": {
+      "context_max_tokens": 3000,
+      "key": "fake/gpt-4o-mini/v1",
+      "max_output_tokens": 512,
+      "prompt_fingerprint": "8eee5389970f",
+      "prompt_version": "grounded/v1",
+      "temperature": 0.0
+    },
+    "min_score": 0.0,
+    "rerank": null,
+    "top_k": 5
+  },
+  "cost": {
+    "input_tokens": 16037,
+    "output_tokens": 341
+  },
+  "dataset": {
+    "content_sha256": "63b4e926e4058a42b1432132fd8b61a2d17b29c9705e1d73d5ce4d7f5902645c",
+    "key": "atlas-qa@1.0.0",
+    "name": "atlas-qa",
+    "version": "1.0.0"
+  },
+  "metrics": {
+    "answered_rate": 0.727273,
+    "by_kind": {
+      "ambiguous": {
+        "correct": 1,
+        "hallucination": 0,
+        "incorrect": 0,
+        "partial": 3,
+        "unnecessary_abstention": 2,
+        "valid_abstention": 0
+      },
+      "answerable": {
+        "correct": 11,
+        "hallucination": 0,
+        "incorrect": 1,
+        "partial": 0,
+        "unnecessary_abstention": 4,
+        "valid_abstention": 0
+      },
+      "unanswerable": {
+        "correct": 0,
+        "hallucination": 1,
+        "incorrect": 0,
+        "partial": 0,
+        "unnecessary_abstention": 0,
+        "valid_abstention": 5
+      }
+    },
+    "citation_precision": 1.0,
+    "citation_recall": 0.9375,
+    "cited_rate": 1.0,
+    "correct_rate": 0.545455,
+    "faithfulness": 1.0,
+    "hallucination_rate": 0.035714,
+    "key_fact_recall": 0.84375,
+    "questions": 28,
+    "unnecessary_abstention_rate": 0.272727,
+    "valid_abstention_rate": 0.833333,
+    "verdicts": {
+      "correct": 12,
+      "hallucination": 1,
+      "incorrect": 1,
+      "partial": 3,
+      "unnecessary_abstention": 6,
+      "valid_abstention": 5
+    }
+  },
+  "questions": [
+    {
+      "abstention": null,
+      "answer": "Cada empleada o empleado puede teletrabajar hasta tres días por semana. [S2]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S2"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q001",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Los martes y los jueves son días de presencia obligatoria en la oficina de Valencia para las reuniones de equipo. [S3]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S3"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q002",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Además abona una compensación de cincuenta euros al mes en concepto de gastos de conexión y suministros. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q003",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Las averías del portátil se comunican al servicio de Sistemas y el equipo de sustitución llega en un máximo de cuarenta y ocho horas. [S3]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S3"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q004",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "La manutención tiene un límite de cuarenta y cinco euros por día en territorio nacional y de setenta euros por día en el extranjero. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q005",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Las facturas se escanean y se suben a la aplicación Gastos en un plazo máximo de treinta días naturales desde la fecha del gasto. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q006",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Las solicitudes aprobadas antes del día diez de cada mes se pagan en la nómina de ese mismo mes. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q007",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Para un incidente de nivel 1 la persona de guardia debe responder en cinco minutos y se abre una sala de crisis en el canal de incidentes. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q008",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "q009",
+      "key_fact_recall": null,
+      "kind": "answerable",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": null,
+      "answer": "Si hubo pérdida de datos personales, el delegado de protección de datos notifica a la autoridad en un máximo de setenta y dos horas. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q010",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "Las contraseñas deben tener al menos catorce caracteres y no pueden reutilizarse entre servicios. [S2]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S2"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q011",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": null,
+      "answer": "El segundo factor de autenticación es obligatorio en el correo, la VPN y el repositorio de código. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q012",
+      "key_fact_recall": 0.0,
+      "kind": "answerable",
+      "verdict": "incorrect"
+    },
+    {
+      "abstention": null,
+      "answer": "Los accesos de producción caducan a los noventa días y deben renovarse con una justificación. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "q013",
+      "key_fact_recall": 1.0,
+      "kind": "answerable",
+      "verdict": "correct"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "q014",
+      "key_fact_recall": null,
+      "kind": "answerable",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "q015",
+      "key_fact_recall": null,
+      "kind": "answerable",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "q016",
+      "key_fact_recall": null,
+      "kind": "answerable",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": null,
+      "answer": "El alojamiento tiene un límite de ciento diez euros por noche en España y de ciento sesenta euros por noche fuera de España. [S1]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S1"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "a001",
+      "key_fact_recall": 1.0,
+      "kind": "ambiguous",
+      "verdict": "correct"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "a002",
+      "key_fact_recall": null,
+      "kind": "ambiguous",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": null,
+      "answer": "La autorización se revisa cada seis meses y puede retirarse con un preaviso de quince días. [S2]",
+      "citation_precision": 1.0,
+      "citation_recall": 0.5,
+      "cited": [
+        "S2"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "a003",
+      "key_fact_recall": 0.5,
+      "kind": "ambiguous",
+      "verdict": "partial"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "a004",
+      "key_fact_recall": null,
+      "kind": "ambiguous",
+      "verdict": "unnecessary_abstention"
+    },
+    {
+      "abstention": null,
+      "answer": "No está permitido instalar el cliente de la VPN en un móvil personal. [S4]",
+      "citation_precision": 1.0,
+      "citation_recall": 1.0,
+      "cited": [
+        "S4"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "a005",
+      "key_fact_recall": 0.5,
+      "kind": "ambiguous",
+      "verdict": "partial"
+    },
+    {
+      "abstention": null,
+      "answer": "Cualquier gasto por encima del límite exige la aprobación escrita de la dirección financiera. [S5]",
+      "citation_precision": 1.0,
+      "citation_recall": 0.5,
+      "cited": [
+        "S5"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "a006",
+      "key_fact_recall": 0.5,
+      "kind": "ambiguous",
+      "verdict": "partial"
+    },
+    {
+      "abstention": null,
+      "answer": "Cada empleada o empleado puede teletrabajar hasta tres días por semana. [S2]",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [
+        "S2"
+      ],
+      "cited_rate": 1.0,
+      "faithfulness": 1.0,
+      "id": "u001",
+      "key_fact_recall": 1.0,
+      "kind": "unanswerable",
+      "verdict": "hallucination"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u002",
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u003",
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u004",
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u005",
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    },
+    {
+      "abstention": "insufficient_evidence",
+      "answer": "",
+      "citation_precision": null,
+      "citation_recall": null,
+      "cited": [],
+      "cited_rate": null,
+      "faithfulness": null,
+      "id": "u006",
+      "key_fact_recall": null,
+      "kind": "unanswerable",
+      "verdict": "valid_abstention"
+    }
+  ],
+  "schema": 1
+}

@@ -1,0 +1,1210 @@
+{
+  "config": {
+    "chunking": {
+      "key": "v1:size=1000,overlap=150",
+      "overlap": 150,
+      "size": 1000
+    },
+    "dedup": {
+      "min_overlap": 0.5,
+      "overfetch": 3,
+      "window": 1
+    },
+    "embedding": {
+      "dimensions": 1536,
+      "key": "fake/text-embedding-3-small/1536/v1",
+      "model": "text-embedding-3-small",
+      "provider": "fake"
+    },
+    "min_score": 0.0,
+    "rerank": null,
+    "top_k": 5
+  },
+  "dataset": {
+    "content_sha256": "63b4e926e4058a42b1432132fd8b61a2d17b29c9705e1d73d5ce4d7f5902645c",
+    "key": "atlas-qa@1.0.0",
+    "name": "atlas-qa",
+    "version": "1.0.0"
+  },
+  "metrics": {
+    "ambiguous": {
+      "mrr": 0.533333,
+      "precision": 0.233333,
+      "questions": 6,
+      "recall": 0.722222,
+      "source_success": 1.0
+    },
+    "answerable": {
+      "mrr": 0.741667,
+      "precision": 0.1875,
+      "questions": 16,
+      "recall": 0.9375,
+      "source_success": 1.0
+    },
+    "overall": {
+      "mrr": 0.684848,
+      "precision": 0.2,
+      "questions": 22,
+      "recall": 0.878788,
+      "source_success": 1.0
+    },
+    "unanswerable": {
+      "min_score": 0.0,
+      "questions": 6,
+      "top_score_max": 0.513892,
+      "top_score_mean": 0.378664,
+      "with_hits_rate": 1.0
+    }
+  },
+  "questions": [
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.301511
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.293357
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.220479
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.197028
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.188982
+        }
+      ],
+      "id": "q001",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "source_success": 1.0,
+      "top_score": 0.301511
+    },
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.322329
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.265165
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.24697
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.221163
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.178145
+        }
+      ],
+      "id": "q002",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.333333,
+      "source_success": 1.0,
+      "top_score": 0.322329
+    },
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": true,
+          "score": 0.404984
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.392913
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.38829
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.378714
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.33939
+        }
+      ],
+      "id": "q003",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.404984
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.396664
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.394985
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": true,
+          "score": 0.368167
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.367538
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.364216
+        }
+      ],
+      "id": "q004",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.333333,
+      "source_success": 1.0,
+      "top_score": 0.396664
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.567016
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.378527
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.368167
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.359354
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.350823
+        }
+      ],
+      "id": "q005",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.567016
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": true,
+          "score": 0.370991
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.336788
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.328976
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.288675
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.246461
+        }
+      ],
+      "id": "q006",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.370991
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": true,
+          "score": 0.45
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.341368
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.248471
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.223607
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.213201
+        }
+      ],
+      "id": "q007",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.45
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.7052
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.611033
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.575224
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.48293
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.432962
+        }
+      ],
+      "id": "q008",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.7052
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 3,
+          "relevant": true,
+          "score": 0.495434
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.456435
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.445373
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.436365
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.349927
+        }
+      ],
+      "id": "q009",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.495434
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": true,
+          "score": 0.507093
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.426401
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.396476
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.390095
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.374166
+        }
+      ],
+      "id": "q010",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.507093
+    },
+    {
+      "hits": [
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.178017
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": true,
+          "score": 0.113067
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.109399
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.107143
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.083918
+        }
+      ],
+      "id": "q011",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "source_success": 1.0,
+      "top_score": 0.178017
+    },
+    {
+      "hits": [
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.673435
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.395594
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.348062
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.333333
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.317821
+        }
+      ],
+      "id": "q012",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.673435
+    },
+    {
+      "hits": [
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 3,
+          "relevant": true,
+          "score": 0.557452
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.408248
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.408248
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.32325
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.316862
+        }
+      ],
+      "id": "q013",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.557452
+    },
+    {
+      "hits": [
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": true,
+          "score": 0.41831
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.313732
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.294834
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.263101
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.258857
+        }
+      ],
+      "id": "q014",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.41831
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.343471
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.313993
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.236113
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.227921
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": true,
+          "score": 0.213809
+        }
+      ],
+      "id": "q015",
+      "kind": "answerable",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.2,
+      "source_success": 1.0,
+      "top_score": 0.343471
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.391312
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.377632
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.351992
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.330841
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.321429
+        }
+      ],
+      "id": "q016",
+      "kind": "answerable",
+      "precision": 0.0,
+      "recall": 0.0,
+      "reciprocal_rank": 0.0,
+      "source_success": 1.0,
+      "top_score": 0.391312
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.39123
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.23355
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.206197
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.204124
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.186097
+        }
+      ],
+      "id": "a001",
+      "kind": "ambiguous",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.39123
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.194625
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.174078
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.163299
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": true,
+          "score": 0.139573
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.13525
+        }
+      ],
+      "id": "a002",
+      "kind": "ambiguous",
+      "precision": 0.2,
+      "recall": 0.333333,
+      "reciprocal_rank": 0.25,
+      "source_success": 1.0,
+      "top_score": 0.194625
+    },
+    {
+      "hits": [
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.251754
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 5,
+          "relevant": true,
+          "score": 0.227921
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.213201
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 5,
+          "relevant": true,
+          "score": 0.206284
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.200805
+        }
+      ],
+      "id": "a003",
+      "kind": "ambiguous",
+      "precision": 0.4,
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "source_success": 1.0,
+      "top_score": 0.251754
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.201853
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.157485
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.129219
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.126872
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.125988
+        }
+      ],
+      "id": "a004",
+      "kind": "ambiguous",
+      "precision": 0.2,
+      "recall": 0.5,
+      "reciprocal_rank": 1.0,
+      "source_success": 1.0,
+      "top_score": 0.201853
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.2
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.149071
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.107763
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 5,
+          "relevant": true,
+          "score": 0.101929
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.047673
+        }
+      ],
+      "id": "a005",
+      "kind": "ambiguous",
+      "precision": 0.2,
+      "recall": 1.0,
+      "reciprocal_rank": 0.25,
+      "source_success": 1.0,
+      "top_score": 0.2
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.238366
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.202031
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.178017
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.160644
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 2,
+          "relevant": true,
+          "score": 0.127775
+        }
+      ],
+      "id": "a006",
+      "kind": "ambiguous",
+      "precision": 0.2,
+      "recall": 0.5,
+      "reciprocal_rank": 0.2,
+      "source_success": 1.0,
+      "top_score": 0.238366
+    },
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.33582
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.319072
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.300235
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.287494
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.273151
+        }
+      ],
+      "id": "u001",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.33582
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.513892
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.498703
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.479001
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.456435
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.440552
+        }
+      ],
+      "id": "u002",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.513892
+    },
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.240523
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.217962
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 5,
+          "relevant": false,
+          "score": 0.186591
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.177116
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.171802
+        }
+      ],
+      "id": "u003",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.240523
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.377632
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.376889
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.356035
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.353553
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.351992
+        }
+      ],
+      "id": "u004",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.377632
+    },
+    {
+      "hits": [
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.392705
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.360375
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 0,
+          "relevant": false,
+          "score": 0.33541
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 3,
+          "relevant": false,
+          "score": 0.314832
+        },
+        {
+          "document": "normas-seguridad.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.30339
+        }
+      ],
+      "id": "u005",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.392705
+    },
+    {
+      "hits": [
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.411409
+        },
+        {
+          "document": "guia-gastos.md",
+          "ordinal": 1,
+          "relevant": false,
+          "score": 0.408248
+        },
+        {
+          "document": "politica-teletrabajo.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.380235
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 2,
+          "relevant": false,
+          "score": 0.363376
+        },
+        {
+          "document": "guia-incidentes.md",
+          "ordinal": 4,
+          "relevant": false,
+          "score": 0.355023
+        }
+      ],
+      "id": "u006",
+      "kind": "unanswerable",
+      "precision": null,
+      "recall": null,
+      "reciprocal_rank": null,
+      "source_success": null,
+      "top_score": 0.411409
+    }
+  ],
+  "schema": 1
+}
