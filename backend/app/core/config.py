@@ -74,6 +74,19 @@ class Settings(BaseSettings):
         default=1000, ge=1, description="Longitud máxima de una pregunta, en caracteres."
     )
 
+    search_default_k: int = Field(
+        default=5, ge=1, description="Fragmentos que devuelve una búsqueda si no se indica `k`."
+    )
+    search_max_k: int = Field(
+        default=20, ge=1, description="Máximo de fragmentos que una búsqueda puede pedir."
+    )
+    search_min_score: float = Field(
+        default=0.0,
+        ge=0,
+        le=1,
+        description="Similitud coseno mínima por defecto; lo que quede por debajo no se devuelve.",
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)
@@ -98,6 +111,8 @@ class Settings(BaseSettings):
         uses_openai = "openai" in (self.embedding_provider, self.llm_provider)
         if uses_openai and not (self.openai_api_key and self.openai_api_key.get_secret_value()):
             raise ValueError("OPENAI_API_KEY es obligatoria cuando algún proveedor es 'openai'")
+        if self.search_default_k > self.search_max_k:
+            raise ValueError("SEARCH_DEFAULT_K no puede superar SEARCH_MAX_K")
         if self.chunk_overlap_chars > self.chunk_size_chars // 2:
             raise ValueError("CHUNK_OVERLAP_CHARS no puede superar la mitad de CHUNK_SIZE_CHARS")
         if self.cookie_samesite == "none" and not self.session_cookie_secure:
