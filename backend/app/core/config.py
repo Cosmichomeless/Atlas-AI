@@ -109,6 +109,15 @@ class Settings(BaseSettings):
     embedding_dimensions: int = Field(default=1536, gt=0)
     llm_provider: Provider = "fake"
     llm_model: str = "gpt-4o-mini"
+    llm_temperature: float = Field(
+        default=0.0, ge=0, le=2, description="Temperatura de generación (0 = lo más determinista)."
+    )
+    llm_max_output_tokens: int = Field(
+        default=512, ge=1, description="Máximo de tokens que el modelo puede generar."
+    )
+    llm_timeout_seconds: float = Field(
+        default=60.0, gt=0, description="Tiempo máximo de espera de una generación."
+    )
     openai_api_key: SecretStr | None = None
     openai_base_url: str = "https://api.openai.com/v1"
 
