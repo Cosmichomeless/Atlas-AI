@@ -187,6 +187,22 @@ chosen by `EMBEDDING_PROVIDER` through `get_embedding_provider()`:
 - `embed` always validates: no blank texts, one vector per text, the configured dimension and finite values.
   Large inputs are sent in batches of `max_batch_size`, keeping order.
 
+### Vector storage
+
+`app/embeddings/store.py` persists vectors in `chunk_embeddings` (pgvector) next to the chunk they describe:
+
+- One row per `(chunk_id, provider, model, dimensions, version)`; the vector is stored with its spec, so
+  vectors from several specs can coexist while a reindex is in progress and are never compared with each other.
+- The column is a fixed `vector(1536)` (`VECTOR_DIMENSIONS`), which lets Postgres build an HNSW cosine index.
+  The dimension is validated on persist: `save_embeddings` raises `EmbeddingError` before writing when a
+  vector does not fit (change `EMBEDDING_DIMENSIONS` or migrate the column and reindex), and the database
+  backs it with `CHECK (dimensions = vector_dims(embedding))`.
+- `save_embeddings(session, chunks, embeddings)` replaces the rows of the same chunks and spec, so saving
+  twice never duplicates. Rows are deleted with their chunk or document (`ON DELETE CASCADE`).
+- `nearest_chunks(session, query, owner_id=..., limit=5)` returns `SimilarChunk(chunk, document, distance)`
+  ordered by cosine distance, restricted to the owner's documents and to the query's spec; page, section and
+  lines of the source stay reachable through `chunk`.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
@@ -265,6 +281,9 @@ Models inherit from `app.core.base.Base` (deterministic constraint naming) and m
   the lease when leaving `PROCESSING`.
 - `document_chunks` — UUID id, `document_id` (`NOT NULL`, FK to `documents`, `ON DELETE CASCADE`, indexed),
   `ordinal` (unique per document), `text`, optional `page`, `section`, `start_line`, `end_line`, `created_at`.
+- `chunk_embeddings` — UUID id, `chunk_id` (`NOT NULL`, FK to `document_chunks`, `ON DELETE CASCADE`), the
+  spec (`provider`, `model`, `dimensions`, `version`), `embedding vector(1536)` with an HNSW cosine index,
+  `created_at`. Unique per chunk and spec.
 - Always query documents through `app.features.documents.queries` (`list_owned_page`, `get_owned`): they
   require the owner id, and a foreign or missing id both return `None`.
 
