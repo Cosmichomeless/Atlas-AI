@@ -24,6 +24,11 @@ class SimilarChunk:
     document: Document
     distance: float
 
+    @property
+    def score(self) -> float:
+        """Similitud coseno en [-1, 1] (1 = misma dirección): lo contrario de la distancia."""
+        return max(-1.0, min(1.0, 1.0 - self.distance))
+
 
 def ensure_fits_schema(spec: EmbeddingSpec) -> None:
     """La columna tiene una dimensión fija: rechaza cualquier otra antes de tocar la base."""
@@ -80,20 +85,29 @@ def save_embeddings(
 
 
 def nearest_chunks(
-    session: Session, query: Embedding, *, owner_id: uuid.UUID, limit: int = 5
+    session: Session,
+    query: Embedding,
+    *,
+    owner_id: uuid.UUID,
+    limit: int = 5,
+    max_distance: float | None = None,
 ) -> list[SimilarChunk]:
     """Fragmentos del propietario más parecidos a `query`, solo entre vectores de su misma spec.
 
-    Filtra siempre por propietario: es la barrera que impide recuperar documentos ajenos.
+    Filtra siempre por propietario: es la barrera que impide recuperar documentos ajenos. Con
+    `max_distance` descarta, en la propia consulta, lo que queda más lejos de esa distancia coseno.
     """
     ensure_fits_schema(query.spec)
     distance = ChunkEmbedding.embedding.cosine_distance(list(query.vector))
-    rows = session.execute(
+    statement = (
         select(DocumentChunk, Document, distance.label("distance"))
         .join(ChunkEmbedding, ChunkEmbedding.chunk_id == DocumentChunk.id)
         .join(Document, Document.id == DocumentChunk.document_id)
         .where(Document.owner_id == owner_id, _same_spec(query.spec))
         .order_by(distance, DocumentChunk.document_id, DocumentChunk.ordinal)
         .limit(limit)
-    ).all()
+    )
+    if max_distance is not None:
+        statement = statement.where(distance <= max_distance)
+    rows = session.execute(statement).all()
     return [SimilarChunk(chunk, document, float(dist)) for chunk, document, dist in rows]

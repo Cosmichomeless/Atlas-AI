@@ -263,6 +263,24 @@ chosen by `EMBEDDING_PROVIDER` through `get_embedding_provider()`:
   nothing matched. A user with no vectors, or with a half-reindexed index that still has matching vectors, is
   fine.
 
+### Vector search
+
+`app/retrieval/search.py` exposes `search_chunks(session, question, owner_id=..., limits=...)`, built on
+`nearest_chunks` (pgvector cosine distance, HNSW index).
+
+- Results are `SimilarChunk`s ordered best first, each with `score` (cosine similarity in [-1, 1], 1 = same
+  direction), the chunk (text, page, section, lines, ordinal) and its document. Ties break by document and
+  ordinal, so the order is deterministic.
+- Only vectors of the question's own spec (model, dimension, version) are compared, and always only the
+  owner's chunks.
+- Limits are configurable and validated (`InvalidSearchError` with a stable `code`):
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `SEARCH_DEFAULT_K` | 5 | Results when `k` is not given (cannot exceed the maximum) |
+| `SEARCH_MAX_K` | 20 | Largest `k` a caller may ask for |
+| `SEARCH_MIN_SCORE` | 0.0 (0 to 1) | Default similarity threshold; weaker matches are dropped inside the query |
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
