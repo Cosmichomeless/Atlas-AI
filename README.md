@@ -10,6 +10,8 @@ frontend/ (Next.js)  ──HTTP/JSON──▶  backend/ (FastAPI)  ──SQL─�
 
 Los detalles de arquitectura y el flujo RAG están en [docs/architecture.md](docs/architecture.md).
 El enunciado original del proyecto está en [docs/project-brief.md](docs/project-brief.md).
+La metodología de evaluación, los resultados reproducibles y sus límites están en
+[docs/evaluation.md](docs/evaluation.md).
 
 ## Estructura del repositorio
 
@@ -20,7 +22,7 @@ El enunciado original del proyecto está en [docs/project-brief.md](docs/project
 | `infra/postgres/init/` | Script de inicialización de la base de datos (crea `atlas_test`, habilita `vector`) |
 | `docker-compose.yml` | PostgreSQL 16 + pgvector para desarrollo local |
 | `.env.example` | Variables de entorno documentadas (se copia a `.env`) |
-| `docs/` | Arquitectura y notas del proyecto |
+| `docs/` | Arquitectura, [evaluación](docs/evaluation.md) y notas del proyecto |
 
 ## Requisitos
 
