@@ -10,7 +10,7 @@ Aplicación web en Next.js (App Router) y TypeScript.
 | `npm run dev` | Servidor de desarrollo en <http://localhost:3000> (`PORT=3100 npm run dev` para otro puerto) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Comprobación de tipos con `tsc` |
-| `npm test` | Tests unitarios (Vitest) |
+| `npm test` | Tests (Vitest + Testing Library, entorno jsdom, API simulada) |
 | `npm run api:types` | Regenera `src/lib/api/schema.d.ts` desde `../backend/openapi.json` |
 | `npm run build` | Build de producción |
 | `npm start` | Sirve el build de producción |
@@ -18,6 +18,9 @@ Aplicación web en Next.js (App Router) y TypeScript.
 ## Estructura
 
 - `src/app/` — rutas, layouts y estilos globales (App Router).
+- `src/app/(public)/` — `/login` y `/register`. `src/app/(app)/` — rutas privadas (`/documents`…), envueltas en `PrivateShell`.
+- `src/components/` — componentes compartidos (`AuthForm`, `PrivateShell`).
+- `src/test/` — utilidades de test: `mockApi` (sustituye `fetch` por un servidor simulado) y doble de `next/navigation`.
 - `src/app/globals.css` — variables de diseño (colores, espaciado, tipografía) y soporte de tema claro/oscuro.
 
 ## Cliente de la API
@@ -33,3 +36,23 @@ partir del contrato OpenAPI del backend; no duplica lógica de negocio.
   `csrf_failed`.
 - `errors.ts` — `ApiError` (`status`, `code`, `message`, `requestId`, `details`) para el formato común de errores.
 - `health.ts` — ejemplo: `getHealth()` y `getDatabaseHealth()`.
+
+## Sesión y rutas privadas
+
+La sesión es una cookie **HttpOnly** del origen de la API: el navegador la envía sola
+(`credentials: "include"`) pero el código de la web nunca la lee ni la guarda. Por eso el estado
+de sesión se pregunta al servidor.
+
+- `src/lib/auth/session.tsx` — `SessionProvider` (en el layout raíz) y `useSession()`. Estados:
+  `loading`, `authenticated` (con el usuario), `anonymous` (401 de `/auth/me`) y `error` (no se pudo
+  comprobar: red o servidor).
+- `PrivateShell` protege `(app)/`: sin sesión redirige a `/login` y **no pinta** el contenido; si no
+  se pudo comprobar la sesión muestra un aviso con «Reintentar» en vez de expulsar. Incluye el
+  cierre de sesión (si falla, la persona sigue dentro y se le avisa).
+- `AuthForm` (login y registro): errores de validación asociados a su campo (`details[].loc`), error
+  general en un `role="alert"`, y el botón se desactiva mientras se envía (sin dobles envíos). Tras
+  registrarse se abre sesión automáticamente (el backend no la crea al registrar).
+
+La redirección se hace en el cliente porque la cookie de sesión no es legible por el servidor de
+Next cuando la API vive en otro origen; **la autorización real es siempre la del backend** (cada
+endpoint exige sesión y filtra por propietario). El guard solo evita mostrar pantallas vacías.

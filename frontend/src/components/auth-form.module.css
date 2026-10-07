@@ -1,0 +1,83 @@
+.page {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  padding: var(--space-6) var(--space-4);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(100%, 24rem);
+}
+
+.title {
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.field label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.field input {
+  font: inherit;
+  font-weight: 400;
+  padding: 0.625rem 0.75rem;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.fieldError,
+.formError {
+  color: var(--danger);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.submit {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.7rem 1rem;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.alt {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.alt a {
+  color: var(--accent);
+}

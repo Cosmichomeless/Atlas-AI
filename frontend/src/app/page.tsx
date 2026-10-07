@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -8,6 +10,12 @@ export default function Home() {
       <p className={styles.lead}>
         Sube tus PDF, notas y archivos Markdown y obtén respuestas con citas a las fuentes
         originales.
+      </p>
+      <p className={styles.actions}>
+        <Link href="/login" className={styles.primary}>
+          Entrar
+        </Link>
+        <Link href="/register">Crear cuenta</Link>
       </p>
     </main>
   );
