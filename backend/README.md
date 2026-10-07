@@ -658,6 +658,27 @@ Uploaded files never live in PostgreSQL: the `documents` table keeps only a refe
 - Writes are atomic (temp file + rename), can enforce a size limit and leave nothing behind on failure.
   Directories are `0700` and files `0600`.
 
+### Document isolation audit
+
+`tests/test_isolation_audit.py` crosses every surface with two users whose documents cover the same
+topic, so a missing owner filter shows up as foreign text in the other user's results:
+
+- **Direct access by ID.** Reading, deleting or opening a passage of another user's document returns
+  the same `404` (same code and message) as a random ID, including crossed combinations (own document
+  with a foreign chunk and the reverse). It never reveals that the document exists.
+- **Files, chunks and vectors.** A foreign delete leaves the stored file, the chunks and the vectors
+  untouched; deleting your own document does not touch anyone else's. Stored keys start with the
+  owner's id.
+- **Search.** A question that matches the other user's text exactly returns none of it; naming a
+  foreign `document_ids` behaves like naming a missing one; the index-compatibility `409` depends
+  only on the caller's own vectors.
+- **Answers and citations.** The model's prompt never contains foreign text (and the model is not
+  called without own evidence); citations and `documents` only point at own sources, even if the model
+  invents labels or echoes its whole prompt.
+- **Reindex.** A reindex scoped to one owner does not requeue anyone else's documents.
+
+Removing the owner filter from the document queries or from the vector search makes this file fail.
+
 ## Configuration
 
 Settings (`app/core/config.py`) come from environment variables, then from a `.env` file at the repository
