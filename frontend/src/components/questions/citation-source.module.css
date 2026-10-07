@@ -1,0 +1,47 @@
+.source {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trigger {
+  font: inherit;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0;
+  text-align: left;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.where {
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.passage {
+  padding: 0.75rem var(--space-4);
+  background: var(--background);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.passage blockquote {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.unavailable {
+  color: var(--danger);
+  font-size: 0.9375rem;
+}

@@ -107,3 +107,17 @@ Ruta privada `/ask` (enlace «Preguntar» en el marco). `QuestionView` envía `P
     mensaje depende de `abstention_reason` (`src/lib/questions/messages.ts`).
   - *Error* (`role="alert"`): 409 `index_incompatible` (reindexar), 503 `embedding_unavailable` /
     `llm_unavailable` (reintentar más tarde), 422 y fallo de red con el mensaje del servidor.
+
+### Citas y pasaje original
+
+Cada fuente de la respuesta (`CitationSource`) es un botón con etiqueta, archivo y ubicación
+(`p. 3 · Sección · líneas 4–9`, según lo que tenga el fragmento). Al pulsarlo pide
+`GET /documents/{document_id}/chunks/{chunk_id}` y muestra el texto original del fragmento; volver a
+pulsar lo oculta. `aria-expanded`/`aria-controls` lo hacen accesible y el botón se deshabilita
+mientras carga, así que no hay peticiones repetidas.
+
+- **Fuente borrada o no disponible:** si el documento se eliminó o se reindexó el servidor responde
+  404 `passage_not_found` y se muestra «Esta fuente ya no está disponible…» sin texto ni reintento. El
+  resto de fallos (red, 5xx) se explican y permiten reintentar pulsando de nuevo.
+- **Backend:** el endpoint filtra por propietario y exige que el fragmento pertenezca al documento
+  de la URL; ajeno, inexistente o borrado devuelven el mismo 404.

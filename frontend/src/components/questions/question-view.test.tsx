@@ -64,8 +64,7 @@ describe("QuestionView", () => {
     await ask();
 
     expect(await screen.findByText("El plazo es de 30 días [S1].")).toBeInTheDocument();
-    expect(screen.getByText("[S1]", { selector: "span" })).toBeInTheDocument();
-    expect(screen.getByText(/doc-1\.pdf, p\. 3/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /\[S1\] doc-1\.pdf p\. 3/ })).toBeInTheDocument();
     expect(calls.find((call) => call.method === "POST")?.body).toEqual({ question: "¿Cuál es el plazo?" });
   });
 
