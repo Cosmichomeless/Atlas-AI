@@ -12,12 +12,10 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://loca
  */
 export function createApiClient(options: { baseUrl?: string; fetch?: typeof fetch } = {}) {
   const baseUrl = options.baseUrl ?? API_BASE_URL;
-  const client = createClient<paths>({
-    baseUrl,
-    credentials: "include",
-    ...(options.fetch ? { fetch: options.fetch } : {}),
-  });
-  client.use(createCsrfMiddleware({ baseUrl, ...(options.fetch ? { fetch: options.fetch } : {}) }));
+  // `fetch` se resuelve en cada llamada (no al crear el cliente) para poder sustituirlo en tests.
+  const fetchImpl = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
+  const client = createClient<paths>({ baseUrl, credentials: "include", fetch: fetchImpl });
+  client.use(createCsrfMiddleware({ baseUrl, fetch: fetchImpl }));
   return client;
 }
 
@@ -37,4 +35,15 @@ export async function unwrap<T>(request: Promise<ApiResult<T>>): Promise<T> {
     throw toApiError(result.response.status, result.error);
   }
   return result.data;
+}
+
+/** Como `unwrap` para respuestas sin cuerpo (204): lanza `ApiError` si la petición falla. */
+export async function unwrapEmpty(request: Promise<ApiResult<unknown>>): Promise<void> {
+  let result: ApiResult<unknown>;
+  try {
+    result = await request;
+  } catch {
+    throw new ApiError(0, "network_error", "No se pudo conectar con el servidor.");
+  }
+  if (result.error !== undefined) throw toApiError(result.response.status, result.error);
 }

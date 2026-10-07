@@ -3,6 +3,12 @@
   --foreground: #171717;
   --muted: #5c5c66;
   --accent: #4f46e5;
+  --on-accent: #ffffff;
+  --border: #d4d4dc;
+  --surface: #f6f6f9;
+  --danger: #b42318;
+  --success: #067647;
+  --radius: 0.5rem;
 
   --space-4: 1rem;
   --space-6: 1.5rem;
@@ -18,6 +24,11 @@
     --foreground: #ededed;
     --muted: #a1a1aa;
     --accent: #818cf8;
+    --on-accent: #0a0a0a;
+    --border: #35353d;
+    --surface: #141417;
+    --danger: #f97066;
+    --success: #47cd89;
   }
 }
 

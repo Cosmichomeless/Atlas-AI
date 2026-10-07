@@ -30,3 +30,22 @@
   font-size: 1.125rem;
   line-height: 1.6;
 }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.actions a {
+  color: var(--accent);
+}
+
+.primary {
+  padding: 0.6rem 1.1rem;
+  color: var(--on-accent) !important;
+  background: var(--accent);
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+}
