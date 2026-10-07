@@ -51,6 +51,18 @@ class Settings(BaseSettings):
     )
     max_upload_mb: int = Field(default=20, gt=0, description="Tamaño máximo de subida en MB.")
 
+    ingestion_poll_seconds: float = Field(
+        default=2.0, gt=0, description="Espera del worker cuando no hay documentos pendientes."
+    )
+    ingestion_lease_seconds: int = Field(
+        default=300,
+        gt=0,
+        description="Segundos que un worker reserva un documento antes de perderlo.",
+    )
+    ingestion_max_attempts: int = Field(
+        default=3, gt=0, description="Intentos de procesamiento antes de dejar el documento FAILED."
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)
