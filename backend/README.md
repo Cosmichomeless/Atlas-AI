@@ -422,6 +422,23 @@ used before anything is delivered:
   (`[S1, S9]` → `[S1]`); `raw_text` keeps what the model wrote. Statements are recomputed on the cleaned text,
   so a claim backed only by an invented label becomes `uncited`.
 
+### Abstention
+
+`app.answers.service.answer_question(session, question, hits, owner_id=..., provider=..., max_context_tokens=...)`
+returns either `Answered` (verified citations, see above) or `Abstained(reason)`. An abstention is a
+normal outcome, never an invented answer:
+
+| Reason | When | Model called? |
+| --- | --- | --- |
+| `no_relevant_chunks` | no retrieved chunks, or none fits the context budget | no |
+| `insufficient_evidence` | the model answered with the `SIN_EVIDENCIA` marker (anywhere in the text) | yes |
+| `no_valid_citations` | after verification no citation backs the answer (none, all rejected, or only "(No consta en los documentos)" statements) | yes |
+
+A provider failure is **not** an abstention: `LLMError` propagates untouched so the API can tell
+"there is no evidence" (HTTP 200, `abstained`) from "the model is unavailable" (HTTP 503). What the
+model said on an abstention is kept in `Abstained.answer` for diagnosis only and is never delivered.
+Abstentions are logged on `app.answers` with the reason and chunk count, never the question.
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
