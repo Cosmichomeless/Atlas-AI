@@ -387,6 +387,29 @@ annotated questions: 16 **answerable**, 6 **ambiguous** (each with its own readi
 - **Limits.** One annotator, no inter-annotator agreement measured, one domain. It detects regressions and
   compares configurations; it does not say how well the system does on real documents.
 
+### Retrieval metrics
+
+`uv run python -m app.evaluation.retrieval` indexes the dataset corpus and measures retrieval for one
+configuration. Options: `--top-k`, `--min-score`, `--no-dedup`, `--dataset`, `--output report.json` and
+`--no-timing`. Run it against a throwaway database (`DATABASE_URL`): it creates a temporary user, runs the
+real ingestion (`process`: extraction, chunking, embeddings) on the corpus documents only, never claiming
+other queued work, and deletes everything when it ends.
+
+- **Relevant chunk.** From a document with evidence and covering at least half of its word sequences, so a
+  quote split between two chunks counts in both.
+- **Metrics per question.** `precision@k` (relevant / returned), `recall@k` (evidence pieces covered /
+  annotated; for ambiguous questions all readings count), `source_success@k` (any chunk from a document with
+  evidence) and `mrr` (reciprocal rank of the first relevant chunk). For unanswerable questions there is no
+  evidence: it reports the best score and how often anything passes the threshold.
+- **Recorded configuration.** The report stores the embedding key (`provider/model/dimensions/version`), the
+  chunking key (size, overlap, chunker version), `top_k`, `min_score`, the dedup policy and the dataset key
+  and SHA-256, plus every question's hits.
+- **Reproducible.** Same configuration and data give the same `metrics` and `questions`. Latency is reported
+  separately under `timing` and varies; use `--no-timing` to compare reports byte for byte. Corpus documents
+  get ids derived from their names because ties in similarity are broken by document id.
+- **Limit.** With the fake providers (the default) the numbers detect pipeline regressions; they say nothing
+  about a real embedding model. Set `EMBEDDING_PROVIDER=openai` to measure one.
+
 ### Bounded context
 
 `app/answers/context.py` turns the retrieved chunks into the context sent to the model, within an explicit
