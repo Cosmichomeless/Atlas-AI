@@ -63,6 +63,13 @@ class Settings(BaseSettings):
         default=3, gt=0, description="Intentos de procesamiento antes de dejar el documento FAILED."
     )
 
+    chunk_size_chars: int = Field(
+        default=1000, ge=100, description="Tamaño máximo de un fragmento, en caracteres."
+    )
+    chunk_overlap_chars: int = Field(
+        default=150, ge=0, description="Caracteres que se repiten entre fragmentos contiguos."
+    )
+
     embedding_provider: Provider = "fake"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = Field(default=1536, gt=0)
@@ -87,6 +94,8 @@ class Settings(BaseSettings):
         uses_openai = "openai" in (self.embedding_provider, self.llm_provider)
         if uses_openai and not (self.openai_api_key and self.openai_api_key.get_secret_value()):
             raise ValueError("OPENAI_API_KEY es obligatoria cuando algún proveedor es 'openai'")
+        if self.chunk_overlap_chars > self.chunk_size_chars // 2:
+            raise ValueError("CHUNK_OVERLAP_CHARS no puede superar la mitad de CHUNK_SIZE_CHARS")
         if self.cookie_samesite == "none" and not self.session_cookie_secure:
             raise ValueError("COOKIE_SAMESITE=none requiere cookies Secure")
         if self.app_env == "production":

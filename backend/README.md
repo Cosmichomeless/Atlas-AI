@@ -138,6 +138,23 @@ uv run python -m app.ingestion.worker   # from backend/; run as many as you like
   password-protected or damaged PDF, empty or non-UTF-8 text). `extract_or_fail(document, storage)` stores that
   cause in `error_summary` and moves the `PROCESSING` document to `FAILED`; the worker owns the commit.
 
+### Chunking policy
+
+`app/ingestion/chunking.py` turns the extracted blocks into the fragments that get embedded
+(`chunk_blocks(blocks, ChunkPolicy)`). It is pure and deterministic: the same input and policy always
+give the same chunks. Configuration (in characters, validated at startup):
+
+| Setting | Default | Why |
+|---|---|---|
+| `CHUNK_SIZE_CHARS` | 1000 (min 100) | ~200-250 tokens: far below any embedding model limit, short enough to cover one idea (precise retrieval) yet long enough to give the LLM useful context |
+| `CHUNK_OVERLAP_CHARS` | 150 (max half the size) | 15 %: a sentence cut at a boundary appears whole in one of the two chunks at little extra storage; capping it at half the size guarantees each chunk adds new text and the split always advances |
+
+- A chunk never crosses a PDF page or a Markdown section, so its citation (`page`, `section`,
+  `start_line`/`end_line`) is exact. Consecutive paragraphs of the same page/section are merged.
+- Cuts prefer, in order: paragraph end, line end, sentence end, word boundary; only text without
+  spaces is cut mid-word.
+- No empty chunks are emitted and `ordinal` follows document order (0, 1, 2…).
+
 ### File storage
 
 Uploaded files never live in PostgreSQL: the `documents` table keeps only a reference
