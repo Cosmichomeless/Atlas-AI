@@ -4,6 +4,7 @@ from fastapi import APIRouter, Cookie, Response
 
 from app.api.csrf import CSRF_COOKIE, generate_token, is_valid_token
 from app.api.errors import AppError, error_responses
+from app.core.config import get_settings
 from app.features.auth.cookies import (
     SESSION_COOKIE,
     clear_session_cookie,
@@ -22,9 +23,15 @@ router = APIRouter(prefix="/auth", tags=["auth"])
     "/register",
     status_code=201,
     summary="Registrar una cuenta",
-    responses=error_responses(409),
+    description=(
+        "Crea una cuenta. Si el servidor cierra el registro (`REGISTRATION_ENABLED=false`) "
+        "responde 403 con el código `registration_closed`."
+    ),
+    responses=error_responses(403, 409),
 )
 def register(payload: RegisterRequest, session: SessionDep) -> UserPublic:
+    if not get_settings().registration_enabled:
+        raise AppError(403, "registration_closed", "El registro está cerrado en este servidor.")
     try:
         user = create_user(session, payload.email, payload.password)
     except EmailAlreadyRegisteredError:

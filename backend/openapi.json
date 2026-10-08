@@ -125,6 +125,7 @@
           "auth"
         ],
         "summary": "Registrar una cuenta",
+        "description": "Crea una cuenta. Si el servidor cierra el registro (`REGISTRATION_ENABLED=false`) responde 403 con el código `registration_closed`.",
         "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
           "content": {
