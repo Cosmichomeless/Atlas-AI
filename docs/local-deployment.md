@@ -34,7 +34,7 @@ docker compose exec api python -m app.smoke --api-url http://localhost:8000 --or
 ```
 
 Sube un documento de prueba, espera a `READY`, pregunta, abre la cita y comprueba la abstención (ver
-[backend/README.md](../backend/README.md)). Si el worker no corre, falla con «¿está arrancado el worker de
+[backend/README.md](../backend/README.md)). Con los proveedores `fake` (el valor por defecto) la comprobación de abstención exige `FAKE_LLM_GROUNDED=true` en `.env` (después, `docker compose up -d`): con `false` el LLM falso siempre responde y la prueba falla en ese paso. Si el worker no corre, falla con «¿está arrancado el worker de
 ingestión?». La calidad de las respuestas se mide con `python -m app.evaluation.gate`.
 
 ### Operación

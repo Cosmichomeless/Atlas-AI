@@ -47,7 +47,7 @@ docker compose ps                        # db, api, ingestion y frontend "health
 
 Frontend en <http://localhost:3000> y API en <http://localhost:8000>. Para comprobar que el recorrido completo funciona (subir → indexar → preguntar → abrir la cita):
 `docker compose exec api python -m app.smoke --api-url http://localhost:8000 --origin http://localhost:3000`
-(ver [backend/README.md](../backend/README.md)). El servicio `migrate` aplica
+(ver [backend/README.md](../backend/README.md)). Con los proveedores `fake` (el valor por defecto) la comprobación de abstención exige `FAKE_LLM_GROUNDED=true` en `.env` (después, `docker compose up -d`): con `false` el LLM falso siempre responde y la prueba falla en ese paso. El servicio `migrate` aplica
 `alembic upgrade head` y termina; API y worker arrancan solo si acabó bien. Los archivos subidos viven en el
 volumen `atlas_data`, compartido por API y worker. Dentro de Compose la base se alcanza como `db:5432`, así que
 el `DATABASE_URL` de `.env` (que apunta a `localhost`) solo sirve para el desarrollo local. Los puertos se

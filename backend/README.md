@@ -554,6 +554,8 @@ question the document answers and requires `answered`, with every citation point
 opened passage containing the original text; asks one it cannot answer and requires `abstained` with no
 citations; and deletes the document.
 
+With the `fake` providers (the default) the abstention check needs `FAKE_LLM_GROUNDED=true` in `.env` (then `docker compose up -d`): with `false` the fake LLM always answers, so the run fails at that step.
+
 - **No private data.** It only creates and reads what it uploaded itself, and the content is fictional. It
   never prints the password or the CSRF token. It leaves the throwaway account behind (there is no endpoint to
   delete users); remove those rows from `users` if you care.

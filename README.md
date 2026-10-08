@@ -48,6 +48,8 @@ comprobar el recorrido completo:
 docker compose exec api python -m app.smoke --api-url http://localhost:8000 --origin http://localhost:3000
 ```
 
+Con los proveedores `fake` (el valor por defecto) la comprobación de abstención exige `FAKE_LLM_GROUNDED=true` en `.env` (después, `docker compose up -d`): con `false` el LLM falso siempre responde y la prueba falla en ese paso.
+
 Sin Docker, o para desarrollar: [docs/development.md](docs/development.md).
 
 ## Capturas

@@ -220,7 +220,9 @@ def check_abstention(client: Client, document_id: str) -> None:
     answer = ask(client, UNANSWERABLE_QUESTION, document_id)
     expect(
         answer["status"] == "abstained",
-        "una pregunta sin respuesta en el documento debía abstenerse y llegó una respuesta",
+        "una pregunta sin respuesta en el documento debía abstenerse y llegó una respuesta "
+        "(con LLM_PROVIDER=fake hace falta FAKE_LLM_GROUNDED=true: si no, el LLM falso "
+        "siempre responde)",
     )
     expect(not answer["citations"], "una abstención no debe citar fuentes")
 
