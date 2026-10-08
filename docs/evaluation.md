@@ -147,8 +147,12 @@ que se encontró y lo que se hizo:
   la mejora será menor y podría no existir. Lo mismo para el respondedor extractivo.
 - **Un solo anotador y sin acuerdo medido.** La anotación la hizo una persona (con ayuda de Claude para
   redactarla). No hay kappa entre anotadores; las preguntas ambiguas son las más subjetivas. El comando
-  `answers calibrate` calcula acuerdo entre el veredicto automático y una revisión humana, pero **esa
-  revisión todavía no se ha hecho** (la issue #48 sigue abierta por eso).
+  `answers calibrate` calcula acuerdo entre el veredicto automático y una revisión humana. La única
+  calibración hecha ([`answers-review-sample.json`](../backend/evaluation/results/answers-review-sample.json),
+  12 preguntas, semilla 0) la etiquetó **Claude, no una persona**, viendo ya el veredicto automático: no es
+  independiente. Coincide en las 12 filas (exactitud 1,0, kappa 1,0), pero con una muestra tan pequeña y de
+  casos mayormente claros ese resultado **no demuestra que el criterio automático sea fiable**. Es una
+  comprobación preliminar de que el procedimiento funciona; la revisión humana independiente sigue sin hacerse.
 - **Tamaño pequeño.** 32 preguntas: una sola pregunta mueve el recall de respondibles unos 6 puntos. Las
   diferencias de una o dos preguntas son ruido; por eso los informes enumeran las preguntas que cambian y
   la puerta de regresión usa márgenes de ~0,01 (menos que el efecto de una pregunta).
@@ -183,8 +187,10 @@ Qué se mide hoy y qué no:
 
 ## Cómo evoluciona esto
 
-1. Revisión humana de la muestra (`answers --review-sample` y `calibrate`) para saber si el veredicto
-   automático es de fiar. Pendiente.
+1. Revisión humana independiente de la muestra (`answers --review-sample` y `calibrate`) para saber si el
+   veredicto automático es de fiar. **Pendiente**: la calibración actual la hizo Claude (ver «Sesgos y
+   limitaciones»). Para hacerla, edita `human_verdict` sin mirar `automatic_verdict` y, si se quiere una
+   medida menos ruidosa, usa `--sample-size 20` o más.
 2. Repetir la comparación con embeddings y LLM reales antes de decidir el reranking por defecto.
 3. Ampliar el dataset (más dominios, un segundo anotador). Añadir preguntas es un cambio menor de versión;
    cambiar las existentes es mayor y hace incomparables los resultados anteriores.

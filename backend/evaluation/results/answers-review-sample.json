@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "dataset": "atlas-qa@1.1.0",
+  "llm": "fake/gpt-4o-mini/v1",
+  "seed": 0,
+  "verdicts": [
+    "correct",
+    "partial",
+    "incorrect",
+    "hallucination",
+    "valid_abstention",
+    "unnecessary_abstention"
+  ],
+  "items": [
+    {
+      "id": "a001",
+      "kind": "ambiguous",
+      "question": "¿Cuál es el límite por noche?",
+      "expected_key_facts": [
+        "ciento diez euros",
+        "ciento sesenta euros"
+      ],
+      "answer": "El alojamiento tiene un límite de ciento diez euros por noche en España y de ciento sesenta euros por noche fuera de España. [S1]",
+      "abstention": null,
+      "automatic_verdict": "correct",
+      "human_verdict": "correct",
+      "notes": "Etiquetado por Claude, no es revisión humana. Da las dos lecturas (España y extranjero) con cita."
+    },
+    {
+      "id": "a002",
+      "kind": "ambiguous",
+      "question": "¿En cuánto tiempo hay que avisar?",
+      "expected_key_facts": [
+        "menos de una hora",
+        "dos horas",
+        "quince días"
+      ],
+      "answer": null,
+      "abstention": "insufficient_evidence",
+      "automatic_verdict": "unnecessary_abstention",
+      "human_verdict": "unnecessary_abstention",
+      "notes": "Etiquetado por Claude, no es revisión humana. Los plazos existen en los documentos; debía responder o pedir la lectura."
+    },
+    {
+      "id": "a003",
+      "kind": "ambiguous",
+      "question": "¿Cada cuánto se revisa?",
+      "expected_key_facts": [
+        "seis meses",
+        "cada mes"
+      ],
+      "answer": "La autorización se revisa cada seis meses y puede retirarse con un preaviso de quince días. [S2]",
+      "abstention": null,
+      "automatic_verdict": "partial",
+      "human_verdict": "partial",
+      "notes": "Etiquetado por Claude, no es revisión humana. Cubre una lectura (seis meses) y omite la otra (cada mes)."
+    },
+    {
+      "id": "a004",
+      "kind": "ambiguous",
+      "question": "¿Qué pasa si no respondo a tiempo?",
+      "expected_key_facts": [
+        "guardia secundaria",
+        "no se reembolsan"
+      ],
+      "answer": null,
+      "abstention": "insufficient_evidence",
+      "automatic_verdict": "unnecessary_abstention",
+      "human_verdict": "unnecessary_abstention",
+      "notes": "Etiquetado por Claude, no es revisión humana. Hay evidencia para ambas lecturas; abstenerse es innecesario."
+    },
+    {
+      "id": "a005",
+      "kind": "ambiguous",
+      "question": "¿Puedo usar mi móvil personal?",
+      "expected_key_facts": [
+        "aplicación gestionada",
+        "no está permitido"
+      ],
+      "answer": "No está permitido instalar el cliente de la VPN en un móvil personal. [S4]",
+      "abstention": null,
+      "automatic_verdict": "partial",
+      "human_verdict": "partial",
+      "notes": "Etiquetado por Claude, no es revisión humana. Recoge 'no está permitido' (VPN) pero no la lectura de la aplicación gestionada."
+    },
+    {
+      "id": "q006",
+      "kind": "answerable",
+      "question": "¿En qué plazo hay que subir las facturas a la aplicación Gastos?",
+      "expected_key_facts": [
+        "treinta días naturales"
+      ],
+      "answer": "Las facturas se escanean y se suben a la aplicación Gastos en un plazo máximo de treinta días naturales desde la fecha del gasto. [S1]",
+      "abstention": null,
+      "automatic_verdict": "correct",
+      "human_verdict": "correct",
+      "notes": "Etiquetado por Claude, no es revisión humana. Responde exactamente al plazo, con cita."
+    },
+    {
+      "id": "q012",
+      "kind": "answerable",
+      "question": "¿Se acepta el SMS como segundo factor de autenticación?",
+      "expected_key_facts": [
+        "no se aceptan"
+      ],
+      "answer": "El segundo factor de autenticación es obligatorio en el correo, la VPN y el repositorio de código. [S1]",
+      "abstention": null,
+      "automatic_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "notes": "Etiquetado por Claude, no es revisión humana. Es fiel a la fuente pero no responde si el SMS se acepta."
+    },
+    {
+      "id": "q014",
+      "kind": "answerable",
+      "question": "¿Qué debo hacer y en qué plazo si pierdo un dispositivo personal con acceso a la empresa?",
+      "expected_key_facts": [
+        "Sistemas",
+        "dos horas"
+      ],
+      "answer": null,
+      "abstention": "insufficient_evidence",
+      "automatic_verdict": "unnecessary_abstention",
+      "human_verdict": "unnecessary_abstention",
+      "notes": "Etiquetado por Claude, no es revisión humana. La pregunta tiene respuesta en los documentos (Sistemas, dos horas)."
+    },
+    {
+      "id": "q018",
+      "kind": "answerable",
+      "question": "¿A qué hora empieza el mantenimiento de las estanterías del almacén?",
+      "expected_key_facts": [
+        "veintidós horas"
+      ],
+      "answer": "El mantenimiento de las estanterías del almacén central empieza a las veintidós horas del último viernes de cada mes y termina el sábado a las seis de la mañana. [S2]",
+      "abstention": null,
+      "automatic_verdict": "correct",
+      "human_verdict": "correct",
+      "notes": "Etiquetado por Claude, no es revisión humana. Da la hora pedida con cita."
+    },
+    {
+      "id": "u001",
+      "kind": "unanswerable",
+      "question": "¿Cuántos días de vacaciones tiene al año una persona empleada?",
+      "expected_key_facts": [],
+      "answer": "Cada empleada o empleado puede teletrabajar hasta tres días por semana. [S2]",
+      "abstention": null,
+      "automatic_verdict": "hallucination",
+      "human_verdict": "hallucination",
+      "notes": "Etiquetado por Claude, no es revisión humana. La pregunta no tiene respuesta en los documentos; contesta con un dato de otro tema en lugar de abstenerse."
+    },
+    {
+      "id": "u002",
+      "kind": "unanswerable",
+      "question": "¿Cuál es el salario base de un técnico de sistemas?",
+      "expected_key_facts": [],
+      "answer": null,
+      "abstention": "insufficient_evidence",
+      "automatic_verdict": "valid_abstention",
+      "human_verdict": "valid_abstention",
+      "notes": "Etiquetado por Claude, no es revisión humana. Sin evidencia en los documentos; abstenerse es correcto."
+    },
+    {
+      "id": "u004",
+      "kind": "unanswerable",
+      "question": "¿Qué proveedor de nube se usa en producción?",
+      "expected_key_facts": [],
+      "answer": null,
+      "abstention": "insufficient_evidence",
+      "automatic_verdict": "valid_abstention",
+      "human_verdict": "valid_abstention",
+      "notes": "Etiquetado por Claude, no es revisión humana. Sin evidencia en los documentos; abstenerse es correcto."
+    }
+  ]
+}
