@@ -671,8 +671,34 @@ The response always has the same shape:
 - `documents`: the documents the consulted fragments came from.
 - `provenance`: prompt version/fingerprint and model (`null` if the model was never called).
 
-Errors: `422` invalid question or scope, `409 index_incompatible`, `503 embedding_unavailable` and
-`503 llm_unavailable`. An abstention is a `200`; a provider failure never is.
+Errors: `422` invalid question or scope, `409 index_incompatible`, `429 usage_limit_exceeded`,
+`503 embedding_unavailable` and `503 llm_unavailable`. An abstention is a `200`; a provider failure never is.
+
+### Request limits and usage accounting
+
+Per-request caps already existed (`QUESTION_MAX_CHARS`, the context budget, the output limit, the number of
+selectable documents). On top of them each user has daily quotas, counted per UTC day:
+
+- `USAGE_DAILY_QUESTIONS` (default 100): questions that reached retrieval.
+- `USAGE_DAILY_TOKENS` (default 300000): input plus output tokens of model calls.
+
+`POST /questions` checks the quota **before** calling any provider. Past the limit it answers
+`429 usage_limit_exceeded` with a message that says which quota was reached and that it resets at midnight
+UTC; no embedding or model call is made, so an excess costs nothing. Invalid questions (`422`) consume nothing.
+
+The consumption is recorded **after** the work, also when the request fails with a `503` (the provider call
+was made and may have been billed). Tokens are the ones the provider reports; if it reports none they are
+estimated from the question and the context sent. An abstention without relevant fragments counts as a
+question and an embedding call, but no model call.
+
+`GET /api/v1/usage` (authenticated) returns today's counters (`questions`, `embedding_calls`, `llm_calls`,
+`input_tokens`, `output_tokens`) and the quotas, so a client can show what is left.
+
+- **Privacy.** The `usage_days` table (`owner_id`, `day`, five counters; one row per user and day) stores
+  numbers only: never a question, a fragment or an answer. Rows are deleted with the user (`ON DELETE CASCADE`).
+- **Concurrency.** Counters are incremented atomically (`INSERT … ON CONFLICT DO UPDATE`), so no record is
+  lost. Check and record are two steps, though: with simultaneous requests a user can exceed a quota by at
+  most the number of requests in flight.
 
 ### Citation and abstention integrity tests
 
@@ -740,6 +766,7 @@ never reach the repository. The example documents the API, database, storage and
   `openai` requires `OPENAI_API_KEY`.
 - `APP_ENV=production` requires `SECRET_KEY` (>= 32 characters) and Secure cookies.
 - Secrets are `SecretStr`: they are masked in `repr()` and logs.
+- `USAGE_DAILY_QUESTIONS` / `USAGE_DAILY_TOKENS` set the per-user daily quotas (see "Request limits and usage accounting").
 - The test suite forces `APP_ENV=test` and `fake` providers regardless of `.env`.
 
 ## Database
@@ -791,6 +818,8 @@ Models inherit from `app.core.base.Base` (deterministic constraint naming) and m
   can only be born `UPLOADED`. Use `document.transition_to(status, error_summary=..., lease_expires_at=...)`:
   it records dates, increments `attempts` on `PROCESSING`, requires an error summary for `FAILED` and clears
   the lease when leaving `PROCESSING`.
+- `usage_days` — primary key (`owner_id`, `day`), `owner_id` FK to `users` (`ON DELETE CASCADE`), counters
+  `questions`, `embedding_calls`, `llm_calls`, `input_tokens`, `output_tokens` (`CHECK` non-negative). Counters only.
 - `document_chunks` — UUID id, `document_id` (`NOT NULL`, FK to `documents`, `ON DELETE CASCADE`, indexed),
   `ordinal` (unique per document), `text`, optional `page`, `section`, `start_line`, `end_line`, `created_at`.
 - `chunk_embeddings` — UUID id, `chunk_id` (`NOT NULL`, FK to `document_chunks`, `ON DELETE CASCADE`), the

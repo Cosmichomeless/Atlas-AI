@@ -246,8 +246,28 @@ export interface paths {
          *
          *     Sin evidencia suficiente responde 200 con `status: "abstained"` y sin texto; un fallo del
          *     proveedor de lenguaje es un 503 `llm_unavailable`, que no es lo mismo que abstenerse.
+         *
+         *     Si el usuario agotó su cuota diaria (preguntas o tokens) responde 429 `usage_limit_exceeded`
+         *     sin llamar a ningún proveedor. El consumo se anota (solo contadores) aunque la petición falle.
          */
         post: operations["ask_question_api_v1_questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mi uso de hoy y mis cuotas */
+        get: operations["my_usage_api_v1_usage_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -673,6 +693,37 @@ export interface components {
             start_line: number | null;
             /** End Line */
             end_line: number | null;
+        };
+        /**
+         * UsageToday
+         * @description Uso de hoy (día UTC) y cuotas. Solo contadores: nunca el contenido de las preguntas.
+         */
+        UsageToday: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Questions */
+            questions: number;
+            /** Embedding Calls */
+            embedding_calls: number;
+            /** Llm Calls */
+            llm_calls: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /**
+             * Daily Questions
+             * @description Preguntas máximas al día.
+             */
+            daily_questions: number;
+            /**
+             * Daily Tokens
+             * @description Tokens máximos (entrada + salida) al día.
+             */
+            daily_tokens: number;
         };
         /**
          * UserPublic
@@ -1556,6 +1607,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Demasiadas solicitudes. Inténtalo de nuevo más tarde. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Error interno del servidor. */
             500: {
                 headers: {
@@ -1567,6 +1627,62 @@ export interface operations {
             };
             /** @description Servicio no disponible. */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_usage_api_v1_usage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageToday"];
+                };
+            };
+            /** @description Autenticación requerida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tienes permiso para realizar esta acción. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Los datos enviados no son válidos. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error interno del servidor. */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -3,11 +3,13 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from app.answers.citations import Citation
 from app.answers.context import BoundedContext
 from app.answers.generate import Answer
 from app.answers.service import Abstained, AbstentionReason, Answered, answer_question
+from app.answers.tokens import estimate_tokens
 from app.api.errors import AppError, error_responses
 from app.core.config import get_settings
 from app.embeddings.provider import EmbeddingError, EmbeddingProvider
@@ -15,6 +17,13 @@ from app.embeddings.registry import get_embedding_provider
 from app.features.auth.dependencies import CurrentUser, SessionDep
 from app.features.documents.states import DocumentStatus
 from app.features.search.router import MAX_SELECTED_IDS, get_search_limits
+from app.features.usage.service import (
+    Tally,
+    UsageLimitExceeded,
+    UsageLimits,
+    ensure_within_limits,
+    record_usage,
+)
 from app.llm.provider import LLMError, LLMProvider
 from app.llm.registry import get_llm_provider
 from app.retrieval.question import (
@@ -155,7 +164,7 @@ def to_response(outcome: Answered | Abstained) -> QuestionResponse:
 @router.post(
     "",
     summary="Preguntar a mis documentos",
-    responses=error_responses(409, 422, 503),
+    responses=error_responses(409, 422, 429, 503),
 )
 def ask_question(
     body: QuestionRequest,
@@ -169,16 +178,53 @@ def ask_question(
 
     Sin evidencia suficiente responde 200 con `status: "abstained"` y sin texto; un fallo del
     proveedor de lenguaje es un 503 `llm_unavailable`, que no es lo mismo que abstenerse.
+
+    Si el usuario agotó su cuota diaria (preguntas o tokens) responde 429 `usage_limit_exceeded`
+    sin llamar a ningún proveedor. El consumo se anota (solo contadores) aunque la petición falle.
     """
     settings = get_settings()
     try:
+        ensure_within_limits(
+            session,
+            user.id,
+            UsageLimits(settings.usage_daily_questions, settings.usage_daily_tokens),
+        )
+    except UsageLimitExceeded as error:
+        raise AppError(429, "usage_limit_exceeded", str(error)) from error
+
+    tally = Tally()
+    try:
+        return _answer(body, user.id, session, embedder, llm, limits, tally)
+    finally:
+        record_usage(session, user.id, tally)
+
+
+def _answer(
+    body: QuestionRequest,
+    owner_id: uuid.UUID,
+    session: Session,
+    embedder: EmbeddingProvider,
+    llm: LLMProvider,
+    limits: SearchLimits,
+    tally: Tally,
+) -> QuestionResponse:
+    settings = get_settings()
+    try:
         k, min_score = limits.resolve(None, None)
-        question = prepare_question(body.question, embedder, max_chars=settings.question_max_chars)
-        ensure_index_compatible(session, question.embedding.spec, owner_id=user.id)
+        try:
+            question = prepare_question(
+                body.question, embedder, max_chars=settings.question_max_chars
+            )
+        except EmbeddingError:
+            tally.embedding_calls += 1
+            raise
+        tally.questions += 1
+        tally.embedding_calls += 1
+        ensure_index_compatible(session, question.embedding.spec, owner_id=owner_id)
         hits = search_chunks(
             session,
             question,
-            owner_id=user.id,
+            owner_id=owner_id,
             limits=limits,
             k=k,
             min_score=min_score,
@@ -203,12 +249,29 @@ def ask_question(
             session,
             question.text,
             hits,
-            owner_id=user.id,
+            owner_id=owner_id,
             provider=llm,
             max_context_tokens=settings.answer_context_max_tokens,
         )
     except LLMError as error:
+        tally.llm_calls += 1
         raise AppError(
             503, "llm_unavailable", "No se pudo generar la respuesta. Inténtalo más tarde."
         ) from error
+    _add_model_usage(tally, question.text, outcome)
     return to_response(outcome)
+
+
+def _add_model_usage(tally: Tally, question: str, outcome: Answered | Abstained) -> None:
+    """Anota la llamada al modelo (si la hubo) con los tokens que informó, o una estimación."""
+    answer = outcome.verified.answer if isinstance(outcome, Answered) else outcome.answer
+    if answer is None:
+        return
+    completion = answer.completion
+    tally.llm_calls += 1
+    if completion.usage is not None:
+        tally.input_tokens += completion.usage.input_tokens
+        tally.output_tokens += completion.usage.output_tokens
+    else:
+        tally.input_tokens += estimate_tokens(question) + answer.context.tokens
+        tally.output_tokens += estimate_tokens(completion.text)
