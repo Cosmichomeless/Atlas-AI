@@ -1,7 +1,27 @@
-# Servicios locales de Atlas AI.
-#   docker compose up -d db      # arranca PostgreSQL + pgvector
-#   docker compose down          # detiene (los datos se conservan en el volumen)
+# Servicios de Atlas AI.
+#   docker compose up -d db      # solo PostgreSQL + pgvector (desarrollo con backend y frontend locales)
+#   docker compose up -d --build # pila completa: db, migraciones, API, worker de ingestión y frontend
+#   docker compose down          # detiene (los datos se conservan en los volúmenes)
 #   docker compose down -v       # detiene y borra los datos
+# La pila completa lee `.env` de la raíz (ver .env.example). Dentro de Compose la base de datos se
+# alcanza como `db:5432` y se ignora DATABASE_URL de `.env` (apunta a localhost para el desarrollo local).
+
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-development}
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-atlas}:${POSTGRES_PASSWORD:-atlas_dev_password}@db:5432/${POSTGRES_DB:-atlas}
+  SECRET_KEY: ${SECRET_KEY:-}
+  FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+  COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
+  COOKIE_SECURE: ${COOKIE_SECURE:-}
+  EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+  EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-1536}
+  LLM_PROVIDER: ${LLM_PROVIDER:-fake}
+  LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  FAKE_LLM_GROUNDED: ${FAKE_LLM_GROUNDED:-false}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -24,5 +44,67 @@ services:
       timeout: 3s
       retries: 10
 
+  # Trabajo de una sola vez: aplica las migraciones y termina. API y worker esperan a que acabe bien.
+  migrate:
+    build:
+      context: backend
+      target: api
+    image: atlas-backend
+    command: ["alembic", "upgrade", "head"]
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: backend
+      target: api
+    image: atlas-backend
+    container_name: atlas-api
+    restart: unless-stopped
+    environment: *backend-env
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      # Los archivos subidos los escribe la API y los lee el worker: mismo volumen.
+      - atlas_data:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  ingestion:
+    build:
+      context: backend
+      target: ingestion
+    image: atlas-ingestion
+    container_name: atlas-ingestion
+    restart: unless-stopped
+    environment: *backend-env
+    volumes:
+      - atlas_data:/data
+    # SIGTERM termina el documento en curso; el plazo debe cubrir una extracción completa.
+    stop_grace_period: 90s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        # Pública: se incrusta en el JavaScript del navegador al construir la imagen.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    image: atlas-frontend
+    container_name: atlas-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   atlas_pgdata:
+  atlas_data:
