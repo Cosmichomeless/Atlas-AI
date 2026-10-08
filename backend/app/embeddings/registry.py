@@ -17,6 +17,7 @@ def build_embedding_provider(settings: Settings) -> EmbeddingProvider:
             model=settings.embedding_model,
             dimensions=settings.embedding_dimensions,
             base_url=settings.openai_base_url,
+            retry=settings.provider_retry,
         )
     return FakeEmbeddingProvider(settings.embedding_model, settings.embedding_dimensions)
 

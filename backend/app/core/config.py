@@ -6,6 +6,7 @@ from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.answers.tokens import min_context_tokens
+from app.core.retry import RetryPolicy
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -164,6 +165,18 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = Field(
         default=60.0, gt=0, description="Tiempo máximo de espera de una generación."
     )
+    provider_retry_attempts: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Intentos totales ante un fallo transitorio del proveedor (1 = sin reintentos)",
+    )
+    provider_retry_base_seconds: float = Field(
+        default=0.5, ge=0, description="Espera antes del primer reintento; se duplica en cada uno."
+    )
+    provider_retry_max_seconds: float = Field(
+        default=8.0, ge=0, description="Tope de la espera entre reintentos (incluido Retry-After)."
+    )
     openai_api_key: SecretStr | None = None
     openai_base_url: str = "https://api.openai.com/v1"
 
@@ -171,6 +184,14 @@ class Settings(BaseSettings):
     @classmethod
     def _empty_cookie_secure_means_default(cls, value: object) -> object:
         return None if value == "" else value
+
+    @property
+    def provider_retry(self) -> RetryPolicy:
+        return RetryPolicy(
+            self.provider_retry_attempts,
+            self.provider_retry_base_seconds,
+            self.provider_retry_max_seconds,
+        )
 
     @property
     def session_cookie_secure(self) -> bool:

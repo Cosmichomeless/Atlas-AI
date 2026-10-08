@@ -12,7 +12,16 @@ from dataclasses import dataclass
 
 
 class EmbeddingError(Exception):
-    """El proveedor no pudo producir los vectores; el mensaje es seguro de registrar."""
+    """El proveedor no pudo producir los vectores; el mensaje es seguro de registrar.
+
+    `transient` indica que reintentar más tarde puede funcionar (red, límite de tasa, caída del
+    servicio) y es lo que se asume por defecto; `False` se reserva a lo que esperar no arregla
+    (clave inválida, petición rechazada, respuesta incomprensible).
+    """
+
+    def __init__(self, message: str, *, transient: bool = True) -> None:
+        super().__init__(message)
+        self.transient = transient
 
 
 @dataclass(frozen=True, slots=True)

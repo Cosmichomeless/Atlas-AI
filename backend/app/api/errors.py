@@ -14,6 +14,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import DBAPIError, OperationalError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,26 @@ async def _validation_error_handler(request: Request, exc: Exception) -> JSONRes
     return _response(request, 422, code, message, details=details)
 
 
+def _is_connection_failure(exc: DBAPIError) -> bool:
+    # `OperationalError` cubre caídas, rechazos de conexión y plazos; `connection_invalidated`
+    # marca una conexión que el pool descartó a mitad de la consulta.
+    return isinstance(exc, OperationalError) or exc.connection_invalidated
+
+
+async def _database_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    err = cast(DBAPIError, exc)
+    if not _is_connection_failure(err):
+        return await _unhandled_error_handler(request, exc)
+    logger.error("Base de datos no disponible (request_id=%s): %s", _request_id(request), err)
+    return _response(
+        request,
+        503,
+        "database_unavailable",
+        "La base de datos no está disponible. Inténtalo de nuevo en unos instantes.",
+        headers={"Retry-After": "5"},
+    )
+
+
 async def _unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Error no controlado (request_id=%s)", _request_id(request), exc_info=exc)
     code, message = STATUS_ERRORS[500]
@@ -136,4 +157,5 @@ def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, _app_error_handler)
     app.add_exception_handler(StarletteHTTPException, _http_error_handler)
     app.add_exception_handler(RequestValidationError, _validation_error_handler)
+    app.add_exception_handler(DBAPIError, _database_error_handler)
     app.add_exception_handler(Exception, _unhandled_error_handler)
