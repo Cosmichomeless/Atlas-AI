@@ -12,6 +12,7 @@ Aplicación web en Next.js (App Router) y TypeScript.
 | `npm run typecheck` | Comprobación de tipos con `tsc` |
 | `npm test` | Tests (Vitest + Testing Library, entorno jsdom, API simulada) |
 | `npm run api:types` | Regenera `src/lib/api/schema.d.ts` desde `../backend/openapi.json` |
+| `npm run e2e` | Recorrido extremo a extremo con Playwright (ver abajo) |
 | `npm run build` | Build de producción |
 | `npm start` | Sirve el build de producción |
 
@@ -135,3 +136,19 @@ simulada (`mockApi`), sin red ni backend:
   borrada avisa solo en su cita sin impedir abrir las demás.
 
 Los componentes tienen además sus propias pruebas unitarias junto al código.
+
+## Pruebas extremo a extremo
+
+`e2e/` (Playwright, Chromium) ejercita el sistema real —Next.js, API, worker y Postgres— con proveedores
+fake y sin credenciales de pago. Cubre registro → subida → «Listo» → pregunta → cita con su pasaje, la
+abstención, el acceso sin sesión y el aislamiento entre usuarios.
+
+```bash
+npx playwright install chromium      # una sola vez
+E2E_DATABASE_URL=postgresql+psycopg://atlas:atlas_dev_password@localhost:5434/atlas_e2e npm run e2e
+```
+
+`playwright.config.ts` levanta solo el backend (`backend/scripts/e2e_backend.py`, puerto 8765) y el
+frontend (build de producción en el 3765). **Recrea la base de datos indicada, que debe llamarse
+`*_e2e`**; nunca apuntes `E2E_DATABASE_URL` a datos que quieras conservar. Los specs no los recoge
+Vitest (`npm test`).

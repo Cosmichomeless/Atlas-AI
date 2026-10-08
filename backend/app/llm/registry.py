@@ -3,7 +3,7 @@
 from functools import lru_cache
 
 from app.core.config import Settings, get_settings
-from app.llm.fake import FakeLLMProvider
+from app.llm.fake import FakeLLMProvider, grounded_responder
 from app.llm.openai import OpenAILLMProvider
 from app.llm.provider import LLMParams, LLMProvider
 
@@ -25,7 +25,8 @@ def build_llm_provider(settings: Settings) -> LLMProvider:
             timeout_seconds=settings.llm_timeout_seconds,
             retry=settings.provider_retry,
         )
-    return FakeLLMProvider(settings.llm_model, params)
+    responder = grounded_responder if settings.fake_llm_grounded else None
+    return FakeLLMProvider(settings.llm_model, params, responder)
 
 
 @lru_cache
