@@ -66,7 +66,9 @@ docker compose up -d --build
 docker compose ps                        # db, api, ingestion y frontend "healthy"; migrate termina con código 0
 ```
 
-Frontend en <http://localhost:3000> y API en <http://localhost:8000>. El servicio `migrate` aplica
+Frontend en <http://localhost:3000> y API en <http://localhost:8000>. Para comprobar que el recorrido completo funciona (subir → indexar → preguntar → abrir la cita):
+`docker compose exec api python -m app.smoke --api-url http://localhost:8000 --origin http://localhost:3000`
+(ver [backend/README.md](backend/README.md)). El servicio `migrate` aplica
 `alembic upgrade head` y termina; API y worker arrancan solo si acabó bien. Los archivos subidos viven en el
 volumen `atlas_data`, compartido por API y worker. Dentro de Compose la base se alcanza como `db:5432`, así que
 el `DATABASE_URL` de `.env` (que apunta a `localhost`) solo sirve para el desarrollo local. Los puertos se
