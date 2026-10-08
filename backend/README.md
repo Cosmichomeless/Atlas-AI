@@ -872,3 +872,21 @@ Tests use the `atlas_test` database (override with `TEST_DATABASE_URL`); start t
 recreates the database named by `DATABASE_URL` (its name **must** end in `_e2e`, otherwise it refuses), runs
 `alembic upgrade head`, and launches the API (`E2E_API_PORT`, default 8765) and the ingestion worker with the
 `fake` embedding provider and `FAKE_LLM_GROUNDED=true`, on a temporary `STORAGE_DIR` that is removed on exit.
+
+## Container image
+
+`backend/Dockerfile` builds one image for the API and for the ingestion worker (same code, same migrations).
+It is reproducible (`uv sync --frozen` from `uv.lock`, pinned base images), runs as a non-root user and holds
+no secrets or user files: `.dockerignore` keeps `.env`, `storage/`, tests and caches out of the context, and
+everything arrives through environment variables and the `/data` volume (`STORAGE_DIR=/data/storage`).
+
+```bash
+docker build -t atlas-backend backend/
+docker run --rm -e DATABASE_URL=postgresql+psycopg://... atlas-backend alembic upgrade head   # migrations
+docker run -d -p 8000:8000 -e DATABASE_URL=... -e FRONTEND_ORIGIN=http://localhost:3000 \
+  -v atlas_data:/data atlas-backend                                                          # API
+```
+
+The image declares a `HEALTHCHECK` on `GET /health` (liveness only: it stays healthy while the database is
+down, and `/api/v1/health/db` reports the database). `APP_PORT` (default 8000) sets the listening port. For
+`APP_ENV=production` the container refuses to start without `SECRET_KEY` (>= 32 characters).
