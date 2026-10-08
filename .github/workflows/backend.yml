@@ -1,0 +1,73 @@
+# CI del backend y del worker de ingestión (mismo paquete): lint, formato, tipos, tests y contrato de la API.
+# Los tests usan PostgreSQL con pgvector y la base `atlas_test`, como en local; los proveedores de IA son
+# `fake`, así que no hacen falta claves ni secretos.
+name: Backend
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Credenciales efímeras de la base de pruebas del propio job (no son secretos).
+      TEST_DATABASE_URL: postgresql+psycopg://atlas:atlas_ci_password@localhost:5433/atlas_test
+      DATABASE_URL: postgresql+psycopg://atlas:atlas_ci_password@localhost:5433/atlas_test
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas_ci_password
+          POSTGRES_DB: atlas_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U atlas -d atlas_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.6"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Instalar dependencias (desde uv.lock)
+        run: uv sync --frozen
+
+      - name: Habilitar pgvector
+        run: psql "postgresql://atlas:atlas_ci_password@localhost:5433/atlas_test" -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Formato
+        run: uv run ruff format --check .
+
+      - name: Tipos
+        run: uv run mypy app tests migrations
+
+      - name: Tests (incluye ingestión y puerta de regresión de calidad)
+        run: uv run pytest
+
+      - name: El contrato de la API está al día
+        run: |
+          uv run python -m app.openapi_export
+          git diff --exit-code -- openapi.json

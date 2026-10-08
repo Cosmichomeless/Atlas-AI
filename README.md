@@ -82,6 +82,13 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy app tests mig
 npm run lint && npm run typecheck && npm test && npm run build
 ```
 
+### Integración continua
+
+`.github/workflows/backend.yml` ejecuta en cada pull request (y en `main`) lo mismo que arriba, con PostgreSQL +
+pgvector como servicio: `uv sync --frozen`, `ruff check`, `ruff format --check`, `mypy`, `pytest` (incluye
+ingestión y la puerta de regresión de calidad) y que `backend/openapi.json` esté al día. No usa secretos: los
+proveedores de IA son `fake`. El workflow del frontend es `.github/workflows/frontend.yml`.
+
 ## Contrato de la API
 
 El backend publica su contrato en `backend/openapi.json` (versionado en git) y el frontend genera tipos
