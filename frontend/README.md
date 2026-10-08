@@ -153,6 +153,23 @@ frontend (build de producción en el 3765). **Recrea la base de datos indicada, 
 `*_e2e`**; nunca apuntes `E2E_DATABASE_URL` a datos que quieras conservar. Los specs no los recoge
 Vitest (`npm test`).
 
+## Imagen de contenedor
+
+`frontend/Dockerfile` compila Next.js en modo `standalone` (`NEXT_OUTPUT=standalone`, ver `next.config.ts`):
+la imagen final lleva solo `server.js`, los estáticos y un usuario sin privilegios, con un `HEALTHCHECK` HTTP.
+Las dependencias salen de `package-lock.json` (`npm ci`) y `.dockerignore` deja fuera `.env*`, `node_modules/`
+y `.next/`.
+
+```bash
+docker build -t atlas-frontend \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.com frontend/
+docker run -d -p 3000:3000 atlas-frontend
+```
+
+`NEXT_PUBLIC_API_BASE_URL` es pública (acaba en el JavaScript del navegador) y se fija **al construir**: cambiarla
+exige reconstruir la imagen. No pongas secretos en ella. En el backend, `FRONTEND_ORIGIN` debe coincidir con el
+origen desde el que se sirve el frontend.
+
 ## Integración continua
 
 `.github/workflows/frontend.yml` se ejecuta en cada pull request (y en `main`): `npm ci`, `npm run lint`,

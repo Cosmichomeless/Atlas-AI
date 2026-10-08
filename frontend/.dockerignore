@@ -1,0 +1,15 @@
+# Nada de esto debe entrar en la imagen: secretos, dependencias locales, builds y tests E2E.
+.env
+.env.*
+!.env.example
+**/.env
+node_modules/
+.next/
+out/
+coverage/
+e2e/
+playwright-report/
+test-results/
+*.log
+Dockerfile
+.dockerignore

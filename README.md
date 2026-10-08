@@ -17,7 +17,7 @@ La metodología de evaluación, los resultados reproducibles y sus límites est�
 
 | Ruta | Contenido |
 | --- | --- |
-| `frontend/` | Aplicación Next.js 16 (App Router, React 19, TypeScript). [README](frontend/README.md) |
+| `frontend/` | Aplicación Next.js 16 (App Router, React 19, TypeScript) y su `Dockerfile`. [README](frontend/README.md) |
 | `backend/` | API FastAPI (Python 3.12, uv), SQLAlchemy, Alembic. [README](backend/README.md) |
 | `infra/postgres/init/` | Script de inicialización de la base de datos (crea `atlas_test`, habilita `vector`) |
 | `docker-compose.yml` | PostgreSQL 16 + pgvector para desarrollo local |
@@ -81,6 +81,13 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy app tests mig
 # frontend/
 npm run lint && npm run typecheck && npm test && npm run build
 ```
+
+### Integración continua
+
+`.github/workflows/backend.yml` ejecuta en cada pull request (y en `main`) lo mismo que arriba, con PostgreSQL +
+pgvector como servicio: `uv sync --frozen`, `ruff check`, `ruff format --check`, `mypy`, `pytest` (incluye
+ingestión y la puerta de regresión de calidad) y que `backend/openapi.json` esté al día. No usa secretos: los
+proveedores de IA son `fake`. El workflow del frontend es `.github/workflows/frontend.yml`.
 
 ## Contrato de la API
 
