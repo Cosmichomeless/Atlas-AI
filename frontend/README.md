@@ -152,3 +152,11 @@ E2E_DATABASE_URL=postgresql+psycopg://atlas:atlas_dev_password@localhost:5434/at
 frontend (build de producción en el 3765). **Recrea la base de datos indicada, que debe llamarse
 `*_e2e`**; nunca apuntes `E2E_DATABASE_URL` a datos que quieras conservar. Los specs no los recoge
 Vitest (`npm test`).
+
+## Integración continua
+
+`.github/workflows/frontend.yml` se ejecuta en cada pull request (y en `main`): `npm ci`, `npm run lint`,
+`npx next typegen` + `npm run typecheck`, `npm test`, `npm run build` y que `src/lib/api/schema.d.ts` esté al
+día respecto a `backend/openapi.json` (`npm run api:types` no debe dejar diff). `LayoutProps`/`PageProps` son
+tipos globales que genera Next, por eso el `typegen` previo: en un clon limpio `tsc` falla sin él. Las pruebas
+E2E de Playwright necesitan backend y base de datos y no se ejecutan en este workflow.

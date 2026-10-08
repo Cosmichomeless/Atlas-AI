@@ -1,0 +1,57 @@
+# CI del frontend: lint, tipos, tests unitarios y de recorrido (Vitest), build de producción y tipos de la API.
+# Las pruebas E2E (Playwright) necesitan backend y base de datos y no se ejecutan aquí.
+name: Frontend
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias (desde package-lock.json)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # `LayoutProps` y `PageProps` son tipos globales que genera Next; sin esto `tsc` falla en limpio.
+      - name: Generar tipos de rutas de Next
+        run: npx next typegen
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build de producción
+        run: npm run build
+
+      - name: Los tipos de la API están al día
+        run: |
+          npm run api:types
+          git diff --exit-code -- src/lib/api/schema.d.ts
