@@ -82,6 +82,8 @@ respuesta, el sistema debe decirlo en lugar de inventar.
 
 ## Estado
 
-Implementado: esqueleto del backend y frontend, PostgreSQL + pgvector, migraciones, configuración,
-contrato de API y cliente tipado. El resto del flujo (acceso, documentos, ingestión, embeddings,
-recuperación y generación) se construye de forma incremental según las issues del repositorio.
+Implementado de extremo a extremo: acceso con sesiones y CSRF, subida y estados de documentos, extracción, fragmentado,
+embeddings con pgvector, recuperación con reranking opcional, generación con citas y abstención, cuotas por usuario,
+evaluación con puerta de regresión, pruebas de humo, E2E, imágenes Docker y Compose, y copias de seguridad. Se
+ejecuta en local; ver [local-deployment.md](local-deployment.md). Los límites conocidos y lo que no está verificado
+están en el README y en [evaluation.md](evaluation.md).

@@ -1,7 +1,11 @@
 # Despliegue en Azure: servicios, costes y límites
 
+> **Alternativa descartada.** El proyecto no se despliega en Azure: se ejecuta en local con Docker Compose y el
+> frontend puede publicarse en Vercel (ver [local-deployment.md](local-deployment.md)). Este documento se conserva
+> como análisis de lo que habría que hacer y cuánto costaría; nada de lo que describe está creado.
+
 Decisión de arquitectura para publicar Atlas AI en Azure (issue #65). Es la base de las issues #66 (secretos y
-HTTPS), #67 (persistencia) y #68 (despliegue). **No hay nada desplegado todavía**: este documento decide y
+HTTPS), #67 (persistencia) y #68 (despliegue). **No hay nada desplegado**: este documento decide y
 estima; las cifras de dinero son órdenes de magnitud para presupuestar, no una factura.
 
 > **Léelo antes de citar un precio.** Los importes dependen de la región, la fecha y el uso. Los marcados con
