@@ -535,6 +535,37 @@ better than it would on top of a real embedding model, and the extractive respon
 trivially 1.0. It shows that the procedure works and what the rule decides with those inputs; repeat it with
 `EMBEDDING_PROVIDER=openai` and `LLM_PROVIDER=openai` before deciding anything for production.
 
+### Smoke checks after a deploy
+
+`uv run python -m app.smoke` checks that a running stack really works end to end. It uses only the standard
+library, so it also runs inside the backend image. Against the local Compose stack:
+
+```bash
+uv run python -m app.smoke --api-url http://localhost:8000 --origin http://localhost:3000
+# or, without installing anything on the host:
+docker compose exec api python -m app.smoke --api-url http://localhost:8000 --origin http://localhost:3000
+```
+
+It stops at the first failure, prints which check failed and why, and exits 0 (all passed) or 1. In order:
+the API and the database answer; it registers a throwaway account (`smoke-<timestamp>@example.com`, it prints
+the address) and signs in; uploads a synthetic three-line document and waits for `READY`
+(`--ingestion-timeout`, default 90 s: a timeout usually means the ingestion worker is not running); asks a
+question the document answers and requires `answered`, with every citation pointing at that document and the
+opened passage containing the original text; asks one it cannot answer and requires `abstained` with no
+citations; and deletes the document.
+
+- **No private data.** It only creates and reads what it uploaded itself, and the content is fictional. It
+  never prints the password or the CSRF token. It leaves the throwaway account behind (there is no endpoint to
+  delete users); remove those rows from `users` if you care.
+- **`--origin` must equal `FRONTEND_ORIGIN`** of the API, or the CSRF check answers 403 (the message says so).
+- **With real providers** the abstention check can fail if the model answers a question outside the document:
+  that is a real finding about the model, not a script error.
+- **Quality after a deploy** is the regression gate below (`uv run python -m app.evaluation.gate`). It indexes
+  its own synthetic corpus under a temporary user and deletes everything afterwards, never touching other
+  users' documents, but it still writes to whatever `DATABASE_URL` points at: run it against a throwaway
+  database (for example `atlas_test`), not the one holding real documents. The image does not ship
+  `evaluation/`, so run the gate from the repository checkout.
+
 ### Quality regression gate
 
 `uv run python -m app.evaluation.gate` is a deterministic subset of the evaluation meant to run on every
