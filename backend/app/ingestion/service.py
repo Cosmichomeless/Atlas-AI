@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.embeddings.provider import EmbeddingError, EmbeddingProvider
 from app.embeddings.store import IncompatibleDimensionsError, ensure_fits_schema, save_embeddings
-from app.features.documents.extraction import extract_or_fail
+from app.features.documents.extraction import DEFAULT_LIMITS, ExtractionLimits, extract_or_fail
 from app.features.documents.models import Document
 from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import FileStorage
@@ -92,6 +92,7 @@ def process(
     policy: ChunkPolicy,
     embedder: EmbeddingProvider,
     max_attempts: int,
+    limits: ExtractionLimits = DEFAULT_LIMITS,
 ) -> None:
     """Procesa un documento reservado y confirma su estado final.
 
@@ -103,7 +104,7 @@ def process(
     reintentar no ayuda, así que falla de inmediato.
     """
     try:
-        blocks = extract_or_fail(document, storage)
+        blocks = extract_or_fail(document, storage, limits)
         chunks = (
             chunk_blocks(blocks, policy) if document.status is DocumentStatus.PROCESSING else []
         )
@@ -169,11 +170,20 @@ def run_once(
     embedder: EmbeddingProvider,
     lease_seconds: int,
     max_attempts: int,
+    limits: ExtractionLimits = DEFAULT_LIMITS,
     now: datetime | None = None,
 ) -> bool:
     """Reserva y procesa un documento; devuelve si había trabajo."""
     document = claim_next(session, lease_seconds=lease_seconds, max_attempts=max_attempts, now=now)
     if document is None:
         return False
-    process(session, storage, document, policy=policy, embedder=embedder, max_attempts=max_attempts)
+    process(
+        session,
+        storage,
+        document,
+        policy=policy,
+        embedder=embedder,
+        max_attempts=max_attempts,
+        limits=limits,
+    )
     return True

@@ -4,32 +4,53 @@ Un PDF produce un bloque por página con texto (`page`, empezando en 1). Un arch
 un bloque por párrafo y uno Markdown, además, por sección (`section`, ruta de encabezados). Los
 archivos de texto también registran el rango de líneas (`start_line`/`end_line`, desde 1).
 
-Si no hay nada que extraer, `ExtractionError` lleva una causa comprensible para el usuario; la
+El análisis tiene límites duros de tamaño, páginas, caracteres y tiempo (`EXTRACTION_*`) y, en el
+worker, corre en un subproceso que se mata al agotar el plazo (ver `isolation.py`). Superar un
+límite o fallar el análisis es un `ExtractionError` con una causa comprensible para el usuario; la
 función `extract_or_fail` la guarda en el documento y lo deja en FAILED.
 """
 
 import logging
-import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import BinaryIO
 
-from pypdf import PdfReader
-from pypdf.errors import PyPdfError
-
+from app.core.config import Settings
+from app.features.documents.isolation import Isolation, run_isolated
 from app.features.documents.models import Document
+from app.features.documents.parsing import Limits, ParsedBlock, ParseError, parse
 from app.features.documents.states import DocumentStatus
 from app.features.documents.storage import FileStorage, StorageError
-from app.features.documents.uploads import FileKind
 
 logger = logging.getLogger(__name__)
-
-_HEADING = re.compile(r"^ {0,3}(#{1,6})[ \t]+(.+?)[ \t#]*$")
-_FENCE = re.compile(r"^ {0,3}(```|~~~)")
 
 
 class ExtractionError(Exception):
     """El documento no se puede convertir en texto; el mensaje está pensado para el usuario."""
+
+
+@dataclass(frozen=True)
+class ExtractionLimits:
+    """Topes del análisis de un archivo; el worker real los toma de `Settings` y aísla."""
+
+    max_bytes: int = 20 * 1024 * 1024
+    max_pages: int = 500
+    max_chars: int = 5_000_000
+    timeout_seconds: int = 60
+    isolated: bool = False
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> "ExtractionLimits":
+        return cls(
+            max_bytes=settings.max_upload_mb * 1024 * 1024,
+            max_pages=settings.extraction_max_pages,
+            max_chars=settings.extraction_max_chars,
+            timeout_seconds=settings.extraction_timeout_seconds,
+            isolated=settings.extraction_isolated,
+        )
+
+
+DEFAULT_LIMITS = ExtractionLimits()
 
 
 @dataclass(frozen=True)
@@ -44,14 +65,16 @@ class ExtractedBlock:
     end_line: int | None = None
 
 
-def extract_or_fail(document: Document, storage: FileStorage) -> list[ExtractedBlock]:
+def extract_or_fail(
+    document: Document, storage: FileStorage, limits: ExtractionLimits = DEFAULT_LIMITS
+) -> list[ExtractedBlock]:
     """Extrae el texto de un documento en PROCESSING; si no puede, lo pasa a FAILED y devuelve [].
 
     El llamador (el worker) es quien confirma la transacción.
     """
     try:
         with storage.open(document.storage_key) as file:
-            return extract_blocks(document.id, file, document.content_type)
+            return extract_blocks(document.id, file, document.content_type, limits)
     except ExtractionError as exc:
         document.transition_to(DocumentStatus.FAILED, error_summary=str(exc))
     except StorageError:
@@ -63,84 +86,33 @@ def extract_or_fail(document: Document, storage: FileStorage) -> list[ExtractedB
 
 
 def extract_blocks(
-    document_id: uuid.UUID, file: BinaryIO, content_type: str
+    document_id: uuid.UUID,
+    file: BinaryIO,
+    content_type: str,
+    limits: ExtractionLimits = DEFAULT_LIMITS,
 ) -> list[ExtractedBlock]:
-    match content_type:
-        case FileKind.PDF:
-            blocks = _extract_pdf(document_id, file)
-        case FileKind.MARKDOWN:
-            blocks = _extract_text(document_id, file, markdown=True)
-        case FileKind.TEXT:
-            blocks = _extract_text(document_id, file, markdown=False)
-        case _:
-            raise ExtractionError("Tipo de archivo no compatible con la extracción de texto.")
-    if not blocks:
-        raise ExtractionError("El archivo no contiene texto.")
-    return blocks
-
-
-def _extract_pdf(document_id: uuid.UUID, file: BinaryIO) -> list[ExtractedBlock]:
+    """Lee el archivo (con tope de tamaño) y lo analiza, en un subproceso con plazo si se pide."""
+    data = file.read(limits.max_bytes + 1)
+    if len(data) > limits.max_bytes:
+        megabytes = limits.max_bytes // (1024 * 1024)
+        raise ExtractionError(f"El archivo supera el tamaño máximo permitido ({megabytes} MB).")
+    parse_limits = Limits(limits.max_pages, limits.max_chars)
     try:
-        reader = PdfReader(file)
-        if reader.is_encrypted:
-            raise ExtractionError("El PDF está protegido con contraseña y no se puede leer.")
-        blocks = []
-        for number, page in enumerate(reader.pages, start=1):
-            text = (page.extract_text() or "").strip()
-            if text:
-                blocks.append(ExtractedBlock(document_id, text, page=number))
-    except ExtractionError:
-        raise
-    except (PyPdfError, ValueError, KeyError, TypeError, RecursionError, OSError) as exc:
-        logger.warning("PDF ilegible en el documento %s: %s", document_id, exc)
-        raise ExtractionError("El PDF está dañado o no se puede leer.") from exc
-    if not blocks:
-        raise ExtractionError(
-            "El PDF no contiene texto extraíble: parece un escaneo o solo tiene imágenes."
-        )
-    return blocks
-
-
-def _extract_text(
-    document_id: uuid.UUID, file: BinaryIO, *, markdown: bool
-) -> list[ExtractedBlock]:
-    try:
-        content = file.read().decode("utf-8-sig")
-    except UnicodeDecodeError as exc:
-        raise ExtractionError("El archivo no está codificado en UTF-8.") from exc
-
-    blocks: list[ExtractedBlock] = []
-    headings: list[tuple[int, str]] = []
-    paragraph: list[str] = []
-    start = 0
-    in_fence = False
-
-    def flush(end_line: int) -> None:
-        text = "\n".join(paragraph).strip()
-        if text:
-            section = " > ".join(title for _, title in headings) or None
-            blocks.append(ExtractedBlock(document_id, text, None, section, start, end_line))
-        paragraph.clear()
-
-    for number, line in enumerate(content.splitlines(), start=1):
-        if markdown and _FENCE.match(line):
-            in_fence = not in_fence
-        heading = None if (not markdown or in_fence) else _HEADING.match(line)
-        if heading:
-            flush(number - 1)
-            level, title = len(heading.group(1)), heading.group(2).strip()
-            while headings and headings[-1][0] >= level:
-                headings.pop()
-            headings.append((level, title))
-            start = number
-            paragraph.append(line)
-        elif not line.strip() and not in_fence:
-            # Un encabezado suelto no es un bloque útil: se une al párrafo que le sigue
-            if not (markdown and len(paragraph) == 1 and _HEADING.match(paragraph[0])):
-                flush(number - 1)
+        if limits.isolated:
+            parsed = run_isolated(
+                content_type, data, parse_limits, Isolation(limits.timeout_seconds)
+            )
         else:
-            if not paragraph:
-                start = number
-            paragraph.append(line)
-    flush(len(content.splitlines()))
-    return blocks
+            parsed = _parse_in_process(content_type, data, parse_limits)
+    except ParseError as exc:
+        raise ExtractionError(str(exc)) from exc
+    return [ExtractedBlock(document_id, **asdict(block)) for block in parsed]
+
+
+def _parse_in_process(content_type: str, data: bytes, limits: Limits) -> list[ParsedBlock]:
+    try:
+        return parse(content_type, data, limits)
+    except ParseError as exc:
+        if exc.__cause__ is not None:
+            logger.warning("Archivo ilegible: %s", exc.__cause__)
+        raise

@@ -65,6 +65,24 @@ class Settings(BaseSettings):
         default=3, gt=0, description="Intentos de procesamiento antes de dejar el documento FAILED."
     )
 
+    extraction_max_pages: int = Field(
+        default=500, gt=0, description="Páginas máximas de un PDF; el exceso falla el documento."
+    )
+    extraction_max_chars: int = Field(
+        default=5_000_000,
+        gt=0,
+        description="Caracteres de texto máximos de un documento; el exceso falla el documento.",
+    )
+    extraction_timeout_seconds: int = Field(
+        default=60,
+        gt=0,
+        description="Plazo del análisis de un archivo; al agotarse se mata el subproceso.",
+    )
+    extraction_isolated: bool = Field(
+        default=True,
+        description="Analiza cada archivo en un subproceso. Solo se desactiva en las pruebas.",
+    )
+
     chunk_size_chars: int = Field(
         default=1000, ge=100, description="Tamaño máximo de un fragmento, en caracteres."
     )
@@ -156,6 +174,10 @@ class Settings(BaseSettings):
         uses_openai = "openai" in (self.embedding_provider, self.llm_provider)
         if uses_openai and not (self.openai_api_key and self.openai_api_key.get_secret_value()):
             raise ValueError("OPENAI_API_KEY es obligatoria cuando algún proveedor es 'openai'")
+        if self.extraction_timeout_seconds >= self.ingestion_lease_seconds:
+            raise ValueError(
+                "EXTRACTION_TIMEOUT_SECONDS debe ser menor que INGESTION_LEASE_SECONDS"
+            )
         if self.search_default_k > self.search_max_k:
             raise ValueError("SEARCH_DEFAULT_K no puede superar SEARCH_MAX_K")
         if self.chunk_overlap_chars > self.chunk_size_chars // 2:

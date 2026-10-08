@@ -95,3 +95,17 @@ def test_env_example_documents_every_setting_without_real_secrets() -> None:
         for name in Settings.model_fields:
             mp.delenv(name.upper(), raising=False)
         Settings(_env_file=None, **keys)  # type: ignore[call-arg, arg-type]
+
+
+def test_extraction_limits_default_to_isolated_and_bounded() -> None:
+    settings = make()
+    assert settings.extraction_isolated is True
+    assert settings.extraction_max_pages == 500
+    assert settings.extraction_max_chars == 5_000_000
+    assert settings.extraction_timeout_seconds < settings.ingestion_lease_seconds
+
+
+def test_extraction_timeout_must_be_shorter_than_the_lease() -> None:
+    # Si el análisis pudiera durar más que la reserva, otro worker retomaría el documento a medias
+    with pytest.raises(ValidationError, match="EXTRACTION_TIMEOUT_SECONDS"):
+        make(extraction_timeout_seconds=600, ingestion_lease_seconds=300)
