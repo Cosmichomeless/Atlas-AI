@@ -33,3 +33,13 @@ def test_dependencies_are_installed_from_the_lockfile() -> None:
     assert "uv sync --frozen" in DOCKERFILE
     assert "COPY app " in DOCKERFILE
     assert "COPY migrations " in DOCKERFILE
+
+
+def test_the_ingestion_stage_runs_the_worker_and_the_api_stays_the_default() -> None:
+    stages = re.findall(r"^FROM .* AS (\w+)$", DOCKERFILE, flags=re.MULTILINE)
+    assert stages[-1] == "api"
+    ingestion = DOCKERFILE.split(" AS ingestion", 1)[1].split(" AS api", 1)[0]
+    assert "app.ingestion.worker" in ingestion
+    assert "app.ingestion.heartbeat" in ingestion
+    assert "STOPSIGNAL SIGTERM" in ingestion
+    assert "INGESTION_HEARTBEAT_FILE" in ingestion
