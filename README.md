@@ -20,7 +20,7 @@ La metodología de evaluación, los resultados reproducibles y sus límites est�
 | `frontend/` | Aplicación Next.js 16 (App Router, React 19, TypeScript) y su `Dockerfile`. [README](frontend/README.md) |
 | `backend/` | API FastAPI (Python 3.12, uv), SQLAlchemy, Alembic. [README](backend/README.md) |
 | `infra/postgres/init/` | Script de inicialización de la base de datos (crea `atlas_test`, habilita `vector`) |
-| `docker-compose.yml` | PostgreSQL 16 + pgvector para desarrollo local |
+| `docker-compose.yml` | PostgreSQL 16 + pgvector, o la pila completa (migraciones, API, worker y frontend) |
 | `.env.example` | Variables de entorno documentadas (se copia a `.env`) |
 | `docs/` | Arquitectura, [evaluación](docs/evaluation.md) y notas del proyecto |
 
@@ -54,6 +54,27 @@ cp .env.example .env.local               # NEXT_PUBLIC_API_BASE_URL=http://local
 npm install
 npm run dev
 ```
+
+### Pila completa con Docker Compose
+
+Alternativa a los pasos 3 y 4: levanta base de datos, migraciones, API, worker de ingestión y frontend con
+un solo comando (no necesitas Python ni Node en tu máquina).
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose ps                        # db, api, ingestion y frontend "healthy"; migrate termina con código 0
+```
+
+Frontend en <http://localhost:3000> y API en <http://localhost:8000>. El servicio `migrate` aplica
+`alembic upgrade head` y termina; API y worker arrancan solo si acabó bien. Los archivos subidos viven en el
+volumen `atlas_data`, compartido por API y worker. Dentro de Compose la base se alcanza como `db:5432`, así que
+el `DATABASE_URL` de `.env` (que apunta a `localhost`) solo sirve para el desarrollo local. Los puertos se
+publican únicamente en `127.0.0.1`.
+
+`NEXT_PUBLIC_API_BASE_URL` se incrusta al **construir** la imagen del frontend: si cambias `API_PORT`,
+`FRONTEND_PORT` o los orígenes, ajusta también `NEXT_PUBLIC_API_BASE_URL` y `FRONTEND_ORIGIN` y reconstruye
+(`docker compose up -d --build`). Con `docker compose up -d db` sigues arrancando solo la base de datos.
 
 ### Comprobar que todo funciona
 
@@ -102,6 +123,6 @@ define `EMBEDDING_PROVIDER=openai` / `LLM_PROVIDER=openai` y `OPENAI_API_KEY` en
 ## Detener y reiniciar
 
 ```bash
-docker compose down        # detiene la base de datos (los datos se conservan)
+docker compose down        # detiene los servicios (los datos se conservan)
 docker compose down -v     # además borra los datos
 ```
