@@ -30,6 +30,9 @@ UNEXPECTED_RETRY = "Error inesperado durante el procesamiento; se reintentará."
 UNEXPECTED_FAILURE = "Error inesperado durante el procesamiento; se superó el máximo de intentos."
 EMBEDDING_RETRY = "No se pudieron generar los embeddings; se reintentará."
 EMBEDDING_FAILURE = "No se pudieron generar los embeddings; se superó el máximo de intentos."
+EMBEDDING_REJECTED = (
+    "El servicio de embeddings rechazó la solicitud y reintentar no ayuda; revisa su configuración."
+)
 INCOMPATIBLE_DIMENSIONS = (
     "La dimensión de los embeddings configurados no cabe en el esquema de vectores; "
     "revisa EMBEDDING_DIMENSIONS."
@@ -98,10 +101,11 @@ def process(
 
     Extrae, fragmenta e indexa (embeddings) en una sola transacción: el documento llega a READY
     con todos sus fragmentos indexados o no cambia nada. Un fallo del propio documento (sin texto,
-    dañado…) lo deja FAILED con su causa. Un fallo del proveedor de embeddings o un error
-    inesperado lo devuelve a la cola para reintentar, o lo da por FAILED al agotar los intentos,
-    sin dejar vectores a medias. Una dimensión incompatible con el esquema es de configuración:
-    reintentar no ayuda, así que falla de inmediato.
+    dañado…) lo deja FAILED con su causa. Un fallo transitorio del proveedor de embeddings o un
+    error inesperado lo devuelve a la cola para reintentar, o lo da por FAILED al agotar los
+    intentos, sin dejar vectores a medias; un rechazo permanente del proveedor lo da por FAILED
+    de inmediato. Nunca queda READY sin todos sus fragmentos indexados. Una dimensión incompatible
+    con el esquema es de configuración: reintentar no ayuda, así que falla de inmediato.
     """
     try:
         blocks = extract_or_fail(document, storage, limits)
@@ -129,9 +133,17 @@ def process(
         session.refresh(document)
         document.transition_to(DocumentStatus.FAILED, error_summary=INCOMPATIBLE_DIMENSIONS)
         session.commit()
-    except EmbeddingError:
+    except EmbeddingError as error:
         logger.exception("Fallo de embeddings procesando el documento %s", document.id)
-        _retry_or_fail(session, document, max_attempts, EMBEDDING_RETRY, EMBEDDING_FAILURE)
+        # Un rechazo permanente (clave inválida, petición incorrecta) no mejora al reintentar:
+        # se agotan los intentos de golpe en vez de gastar la cola en repetirlo.
+        _retry_or_fail(
+            session,
+            document,
+            max_attempts if error.transient else 0,
+            EMBEDDING_RETRY,
+            EMBEDDING_REJECTED if not error.transient else EMBEDDING_FAILURE,
+        )
     except Exception:
         logger.exception("Fallo inesperado procesando el documento %s", document.id)
         _retry_or_fail(session, document, max_attempts, UNEXPECTED_RETRY, UNEXPECTED_FAILURE)

@@ -679,6 +679,7 @@ Errors: `422` invalid question or scope, `409 index_incompatible`, `429 usage_li
 Per-request caps already existed (`QUESTION_MAX_CHARS`, the context budget, the output limit, the number of
 selectable documents). On top of them each user has daily quotas, counted per UTC day:
 
+- `PROVIDER_RETRY_*` bound the retries of transient provider failures (see "Failure handling").
 - `USAGE_DAILY_QUESTIONS` (default 100): questions that reached retrieval.
 - `USAGE_DAILY_TOKENS` (default 300000): input plus output tokens of model calls.
 
@@ -755,6 +756,33 @@ topic, so a missing owner filter shows up as foreign text in the other user's re
 - **Reindex.** A reindex scoped to one owner does not requeue anyone else's documents.
 
 Removing the owner filter from the document queries or from the vector search makes this file fail.
+
+### Failure handling
+
+Embeddings, the LLM and PostgreSQL can fail; each failure ends in a clear state and never in a
+half-indexed document.
+
+- **Provider retries.** The OpenAI adapters retry transient failures (network errors, timeouts and HTTP
+  408/409/425/429/500/502/503/504) with exponential backoff, honouring `Retry-After` up to a cap
+  (`app/core/retry.py`). `PROVIDER_RETRY_ATTEMPTS` (default 3, total calls, 1 disables retries),
+  `PROVIDER_RETRY_BASE_SECONDS` (0.5) and `PROVIDER_RETRY_MAX_SECONDS` (8) tune it. A rejection that
+  waiting cannot fix (401, 400, malformed answer) is not retried. `EmbeddingError` and `LLMError`
+  carry `transient` so callers can tell the two apart; unclassified errors count as transient.
+- **Questions.** After the retries are exhausted `POST /api/v1/questions` answers `503`
+  (`embedding_unavailable` or `llm_unavailable`) with a message the UI shows as is; the quota
+  accounting still counts the attempt. `index_incompatible` is `409` and quota exhaustion `429`.
+- **Ingestion.** A transient embedding failure puts the document back in `UPLOADED` with an
+  explanation until the attempts run out, then `FAILED`. A permanent rejection fails it at once.
+  `READY` is only reached in the same transaction that stores every chunk and vector, so a failure
+  never leaves a document `READY` with a partial index. If PostgreSQL goes down while the error is
+  being recorded the document stays `PROCESSING` and is picked up again when its lease expires.
+- **Database.** A connection failure in any endpoint is a `503` `database_unavailable` with
+  `Retry-After: 5`; other database errors stay a generic `500`. Neither leaks the driver message.
+- **Worker.** The ingestion loop survives a database outage: after consecutive failures it waits
+  longer between polls (doubling, capped at 30 s) and goes back to the normal interval on recovery.
+
+`tests/test_failure_handling.py` covers the policy, both adapters, the settings, the ingestion
+outcomes, the worker backoff and the `503` mapping.
 
 ## Configuration
 

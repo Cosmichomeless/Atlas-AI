@@ -19,6 +19,8 @@ from app.ingestion.service import run_once
 
 logger = logging.getLogger("atlas.ingestion")
 
+MAX_BACKOFF_SECONDS = 30.0
+
 
 def run(stop: threading.Event) -> None:
     settings = get_settings()
@@ -28,6 +30,7 @@ def run(stop: threading.Event) -> None:
     embedder = get_embedding_provider()
     sessionmaker = get_sessionmaker()
     logger.info("Worker de ingestión iniciado")
+    failures = 0
     while not stop.is_set():
         try:
             # Sesión nueva por documento: un fallo no contamina el siguiente
@@ -41,12 +44,24 @@ def run(stop: threading.Event) -> None:
                     max_attempts=settings.ingestion_max_attempts,
                     limits=limits,
                 )
+            failures = 0
         except Exception:
-            logger.exception("Fallo del worker (¿base de datos no disponible?); se reintenta")
+            failures += 1
+            logger.exception(
+                "Fallo del worker (¿base de datos no disponible?); se reintenta (%d seguidos)",
+                failures,
+            )
             worked = False
         if not worked:
-            stop.wait(settings.ingestion_poll_seconds)
+            stop.wait(idle_wait(settings.ingestion_poll_seconds, failures))
     logger.info("Worker de ingestión detenido")
+
+
+def idle_wait(poll_seconds: float, failures: int) -> float:
+    """Espera entre vueltas: la de sondeo, o una creciente (con tope) si no se recupera."""
+    if failures == 0:
+        return poll_seconds
+    return float(min(poll_seconds * 2 ** min(failures, 6), MAX_BACKOFF_SECONDS))
 
 
 def main() -> None:

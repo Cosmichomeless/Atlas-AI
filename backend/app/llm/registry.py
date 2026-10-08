@@ -23,6 +23,7 @@ def build_llm_provider(settings: Settings) -> LLMProvider:
             params=params,
             base_url=settings.openai_base_url,
             timeout_seconds=settings.llm_timeout_seconds,
+            retry=settings.provider_retry,
         )
     return FakeLLMProvider(settings.llm_model, params)
 
