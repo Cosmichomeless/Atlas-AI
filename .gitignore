@@ -233,3 +233,6 @@ storage/
 
 # macOS
 .DS_Store
+
+# Copias de seguridad locales (contienen documentos de usuarios)
+backups/
