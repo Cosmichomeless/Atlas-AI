@@ -16,6 +16,7 @@ import {
   describeQuestionError,
 } from "@/lib/questions/messages";
 
+import { AlertIcon, InfoIcon, SparkIcon } from "../icons";
 import { CitationSource } from "./citation-source";
 import styles from "./question-view.module.css";
 
@@ -77,9 +78,12 @@ export function QuestionView() {
 
   return (
     <section className={styles.view} aria-labelledby="ask-title">
-      <h1 id="ask-title" className={styles.title}>
-        Preguntar a tus documentos
-      </h1>
+      <header className={styles.header}>
+        <h1 id="ask-title" className={styles.title}>
+          Preguntar a tus documentos
+        </h1>
+        <p className={styles.lead}>Cada respuesta se construye solo con tus documentos y cita sus fuentes.</p>
+      </header>
 
       {loadError && (
         <p role="alert" className={styles.error}>
@@ -87,7 +91,7 @@ export function QuestionView() {
         </p>
       )}
       {documents !== null && documents.length === 0 && (
-        <p className={styles.muted}>
+        <p className={styles.empty}>
           Aún no tienes documentos listos. <Link href="/documents">Sube uno</Link> y espera a que termine de procesarse.
         </p>
       )}
@@ -118,6 +122,7 @@ export function QuestionView() {
         <label className={styles.field}>
           Tu pregunta
           <textarea
+            className={styles.textarea}
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             maxLength={QUESTION_MAX_CHARS}
@@ -136,12 +141,18 @@ export function QuestionView() {
 
       <div aria-live="polite">
         {asking && (
-          <p role="status" className={styles.muted}>
+          <p role="status" className={styles.working}>
+            <span className={styles.dots} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
             Consultando tus documentos…
           </p>
         )}
         {outcome?.kind === "error" && (
           <div role="alert" className={`${styles.result} ${styles.error}`}>
+            <AlertIcon size={20} />
             <p>{outcome.message}</p>
           </div>
         )}
@@ -151,12 +162,28 @@ export function QuestionView() {
   );
 }
 
+/** Pinta las marcas `[S1]` del texto como etiquetas; el texto y su orden no cambian. */
+function withCitationMarks(text: string) {
+  return text.split(/(\[S\d+\])/).map((part, index) =>
+    /^\[S\d+\]$/.test(part) ? (
+      <span key={index} className={styles.mark}>
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+}
+
 function Result({ response }: { response: QuestionResponse }) {
   if (response.status === "abstained" || response.text === null) {
     const reason = response.abstention_reason;
     return (
       <article className={`${styles.result} ${styles.abstained}`} aria-label="Sin respuesta">
-        <h2>No hay respuesta</h2>
+        <h2 className={styles.resultTitle}>
+          <InfoIcon size={20} />
+          No hay respuesta
+        </h2>
         <p>{reason ? ABSTENTION_MESSAGE[reason] : ABSTENTION_FALLBACK}</p>
       </article>
     );
@@ -164,8 +191,11 @@ function Result({ response }: { response: QuestionResponse }) {
 
   return (
     <article className={styles.result} aria-label="Respuesta">
-      <h2>Respuesta</h2>
-      <p className={styles.answer}>{response.text}</p>
+      <h2 className={styles.resultTitle}>
+        <SparkIcon size={20} />
+        Respuesta
+      </h2>
+      <p className={styles.answer}>{withCitationMarks(response.text)}</p>
       {response.truncated && (
         <p role="note" className={styles.notice}>
           La respuesta se cortó por su longitud máxima: puede estar incompleta.
@@ -183,7 +213,7 @@ function Result({ response }: { response: QuestionResponse }) {
       )}
       {response.citations.length > 0 && (
         <>
-          <h3>Fuentes</h3>
+          <h3 className={styles.sourcesTitle}>Fuentes</h3>
           <p className={styles.notice}>Pulsa una fuente para ver el pasaje original.</p>
           <ul className={styles.sources}>
             {response.citations.map((citation) => (

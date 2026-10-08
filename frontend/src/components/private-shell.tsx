@@ -1,16 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { describeError } from "@/lib/api/messages";
 import { useSession } from "@/lib/auth/session";
 
+import { FileIcon, SparkIcon } from "./icons";
+import { Brand } from "./logo";
 import styles from "./private-shell.module.css";
 
 export const LOGIN_PATH = "/login";
+
+const NAV = [
+  { href: "/documents", label: "Documentos", Icon: FileIcon },
+  { href: "/ask", label: "Preguntar", Icon: SparkIcon },
+] as const;
 
 /**
  * Marco de las rutas privadas. Sin sesión redirige a `/login` y no pinta nada del contenido;
@@ -19,6 +26,7 @@ export const LOGIN_PATH = "/login";
  */
 export function PrivateShell({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { state, signOut, refresh } = useSession();
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -30,6 +38,7 @@ export function PrivateShell({ children }: { children: ReactNode }) {
   if (state.status === "loading" || state.status === "anonymous") {
     return (
       <p role="status" className={styles.status}>
+        <span className={styles.spinner} aria-hidden="true" />
         {state.status === "loading" ? "Comprobando sesión…" : "Redirigiendo al acceso…"}
       </p>
     );
@@ -61,18 +70,30 @@ export function PrivateShell({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <Link href="/documents" className={styles.brand}>
-          Atlas AI
-        </Link>
-        <nav aria-label="Principal" className={styles.nav}>
-          <Link href="/documents">Documentos</Link>
-          <Link href="/ask">Preguntar</Link>
-        </nav>
-        <div className={styles.user}>
-          <span className={styles.email}>{state.user.email}</span>
-          <button type="button" className={styles.button} onClick={onSignOut} disabled={signingOut}>
-            {signingOut ? "Saliendo…" : "Cerrar sesión"}
-          </button>
+        <div className={styles.bar}>
+          <Brand href="/documents" />
+          <nav aria-label="Principal" className={styles.nav}>
+            {NAV.map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={styles.link}
+                aria-current={pathname === href ? "page" : undefined}
+              >
+                <Icon size={16} />
+                {label}
+              </Link>
+            ))}
+          </nav>
+          <div className={styles.user}>
+            <span className={styles.avatar} aria-hidden="true">
+              {state.user.email.charAt(0).toUpperCase()}
+            </span>
+            <span className={styles.email}>{state.user.email}</span>
+            <button type="button" className={styles.button} onClick={onSignOut} disabled={signingOut}>
+              {signingOut ? "Saliendo…" : "Cerrar sesión"}
+            </button>
+          </div>
         </div>
       </header>
       {signOutError && (

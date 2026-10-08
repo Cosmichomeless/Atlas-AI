@@ -8,7 +8,7 @@ import { SessionProvider } from "@/lib/auth/session";
 import { NO_CONTENT, USER, errorResponse, jsonResponse, mockApi } from "@/test/api-mock";
 import { resetRouter, router } from "@/test/navigation";
 
-vi.mock("next/navigation", () => ({ useRouter: () => router }));
+vi.mock("next/navigation", () => ({ useRouter: () => router, usePathname: () => "/documents" }));
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>

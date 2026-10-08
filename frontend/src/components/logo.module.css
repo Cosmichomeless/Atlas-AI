@@ -1,0 +1,19 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--foreground);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--foreground);
+}
+
+.mark {
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgb(91 91 240 / 0.35));
+}

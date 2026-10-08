@@ -9,6 +9,7 @@ import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/api/auth";
 import { describeError, fieldErrors } from "@/lib/api/messages";
 import { useSession } from "@/lib/auth/session";
 
+import { Brand } from "./logo";
 import styles from "./auth-form.module.css";
 
 export const PRIVATE_HOME = "/documents";
@@ -16,6 +17,7 @@ export const PRIVATE_HOME = "/documents";
 const COPY = {
   login: {
     title: "Entrar",
+    lead: "Accede para consultar tus documentos.",
     submit: "Entrar",
     pending: "Entrando…",
     alt: { text: "¿No tienes cuenta?", href: "/register", label: "Crear cuenta" },
@@ -23,6 +25,7 @@ const COPY = {
   },
   register: {
     title: "Crear cuenta",
+    lead: "Sube tus documentos y pregunta con citas a las fuentes.",
     submit: "Crear cuenta",
     pending: "Creando cuenta…",
     alt: { text: "¿Ya tienes cuenta?", href: "/login", label: "Entrar" },
@@ -64,15 +67,22 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   return (
     <main className={styles.page}>
+      <div className={styles.brand}>
+        <Brand href="/" />
+      </div>
       <form className={styles.form} onSubmit={onSubmit} noValidate aria-labelledby="auth-title">
-        <h1 id="auth-title" className={styles.title}>
-          {copy.title}
-        </h1>
+        <header className={styles.heading}>
+          <h1 id="auth-title" className={styles.title}>
+            {copy.title}
+          </h1>
+          <p className={styles.lead}>{copy.lead}</p>
+        </header>
 
         <div className={styles.field}>
           <label htmlFor="email">Email</label>
           <input
             id="email"
+            className={styles.input}
             type="email"
             name="email"
             autoComplete="email"
@@ -93,6 +103,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <label htmlFor="password">Contraseña</label>
           <input
             id="password"
+            className={styles.input}
             type="password"
             name="password"
             autoComplete={copy.autoComplete}

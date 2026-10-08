@@ -7,6 +7,7 @@ import type { DocumentList } from "@/lib/api/documents";
 import { describeError } from "@/lib/api/messages";
 import { isPending } from "@/lib/documents/status";
 
+import { UploadIcon } from "../icons";
 import styles from "./document-library.module.css";
 import { DocumentRow } from "./document-row";
 import { UploadForm } from "./upload-form";
@@ -85,23 +86,44 @@ export function DocumentLibrary() {
 
   return (
     <section className={styles.library} aria-labelledby="documents-title">
-      <h1 id="documents-title">Mis documentos</h1>
+      <header className={styles.header}>
+        <h1 id="documents-title" className={styles.title}>
+          Mis documentos
+        </h1>
+        <p className={styles.lead}>Sube tus archivos y, cuando estén listos, pregúntales lo que quieras.</p>
+      </header>
 
       <UploadForm onUploaded={() => void load(0)} />
 
       {error && (
         <div role="alert" className={styles.error}>
           <p>{error}</p>
-          <button type="button" onClick={() => void load(offset)}>
+          <button type="button" className={styles.retry} onClick={() => void load(offset)}>
             Reintentar
           </button>
         </div>
       )}
 
-      {loading && !page && <p className={styles.muted}>Cargando documentos…</p>}
+      {loading && !page && (
+        <>
+          <p className={styles.muted}>
+            <span className={styles.spinner} aria-hidden="true" />
+            Cargando documentos…
+          </p>
+          <ul className={styles.skeletons} aria-hidden="true">
+            <li className={styles.skeleton} />
+            <li className={styles.skeleton} />
+          </ul>
+        </>
+      )}
 
       {page && page.items.length === 0 && !error && (
-        <p className={styles.empty}>Todavía no has subido ningún documento. Empieza subiendo uno arriba.</p>
+        <div className={styles.empty}>
+          <span className={styles.emptyIcon}>
+            <UploadIcon size={22} />
+          </span>
+          <p>Todavía no has subido ningún documento. Empieza subiendo uno arriba.</p>
+        </div>
       )}
 
       {page && page.items.length > 0 && (
@@ -113,13 +135,13 @@ export function DocumentLibrary() {
           </ul>
 
           <nav className={styles.pager} aria-label="Paginación">
-            <button type="button" disabled={loading || offset === 0} onClick={() => void load(Math.max(0, offset - PAGE_SIZE))}>
+            <button type="button" className={styles.page} disabled={loading || offset === 0} onClick={() => void load(Math.max(0, offset - PAGE_SIZE))}>
               Anterior
             </button>
             <span>
               {first}–{last} de {total}
             </span>
-            <button type="button" disabled={loading || last >= total} onClick={() => void load(offset + PAGE_SIZE)}>
+            <button type="button" className={styles.page} disabled={loading || last >= total} onClick={() => void load(offset + PAGE_SIZE)}>
               Siguiente
             </button>
           </nav>

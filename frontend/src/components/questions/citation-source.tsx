@@ -9,6 +9,7 @@ import { describeError } from "@/lib/api/messages";
 import type { QuestionCitation } from "@/lib/api/questions";
 import { describeLocation } from "@/lib/questions/location";
 
+import { ChevronIcon } from "../icons";
 import styles from "./citation-source.module.css";
 
 type Passage =
@@ -62,11 +63,16 @@ export function CitationSource({ citation }: { citation: QuestionCitation }) {
         onClick={onToggle}
         disabled={state.kind === "loading"}
       >
-        <span className={styles.label}>[{citation.label}]</span> {citation.filename}
+        <span className={styles.label}>[{citation.label}]</span> <span className={styles.name}>{citation.filename}</span>
         {where && <> <span className={styles.where}>{where}</span></>}
+        <ChevronIcon size={16} className={styles.chevron} />
       </button>
       <div id={panelId} aria-live="polite">
-        {state.kind === "loading" && <p role="status">Cargando pasaje…</p>}
+        {state.kind === "loading" && (
+          <p role="status" className={styles.loading}>
+            Cargando pasaje…
+          </p>
+        )}
         {state.kind === "open" && (
           <figure className={styles.passage}>
             <figcaption className={styles.where}>

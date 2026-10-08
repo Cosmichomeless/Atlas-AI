@@ -9,9 +9,17 @@ import { describeError } from "@/lib/api/messages";
 import { STATUS_LABEL } from "@/lib/documents/status";
 import { formatSize } from "@/lib/documents/validation";
 
+import { FileIcon } from "../icons";
 import styles from "./document-row.module.css";
 
 const dateFormat = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" });
+
+/** Extensión en minúsculas, para dar a cada tipo de archivo su color en el icono. */
+function kindOf(filename: string): "pdf" | "md" | "txt" {
+  const extension = filename.split(".").pop()?.toLowerCase();
+  if (extension === "pdf") return "pdf";
+  return extension === "md" || extension === "markdown" ? "md" : "txt";
+}
 
 const NO_CAUSE = "El procesamiento falló y no se registró la causa. Puedes eliminarlo y volver a subirlo.";
 
@@ -66,13 +74,17 @@ export function DocumentRow({ document, onDeleted }: Props) {
   return (
     <li className={styles.item}>
       <div className={styles.main}>
-        <div>
+        <span className={styles.kind} data-kind={kindOf(document.filename)} aria-hidden="true">
+          <FileIcon size={20} />
+        </span>
+        <div className={styles.text}>
           <p className={styles.name}>{document.filename}</p>
           <p className={styles.meta}>
             {formatSize(document.size_bytes)} · {dateFormat.format(new Date(document.created_at))}
           </p>
         </div>
         <span className={styles.status} data-status={document.status}>
+          <span className={styles.dot} aria-hidden="true" />
           {STATUS_LABEL[document.status]}
         </span>
       </div>
@@ -90,23 +102,24 @@ export function DocumentRow({ document, onDeleted }: Props) {
 
       <div className={styles.actions}>
         {failed && !cause && (
-          <button type="button" onClick={() => void showCause()} disabled={causeLoading}>
+          <button type="button" className={styles.action} onClick={() => void showCause()} disabled={causeLoading}>
             {causeLoading ? "Cargando…" : "Ver causa"}
           </button>
         )}
         {confirming ? (
           <>
             <span>¿Eliminar «{document.filename}»?</span>
-            <button type="button" className={styles.danger} onClick={() => void remove()} disabled={deleting}>
+            <button type="button" className={styles.confirm} onClick={() => void remove()} disabled={deleting}>
               {deleting ? "Eliminando…" : "Sí, eliminar"}
             </button>
-            <button type="button" onClick={() => setConfirming(false)} disabled={deleting}>
+            <button type="button" className={styles.action} onClick={() => setConfirming(false)} disabled={deleting}>
               Cancelar
             </button>
           </>
         ) : (
           <button
             type="button"
+            className={styles.action}
             onClick={() => setConfirming(true)}
             disabled={processing}
             aria-label={`Eliminar ${document.filename}`}

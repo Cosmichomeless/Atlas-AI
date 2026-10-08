@@ -5,43 +5,101 @@
 }
 
 .trigger {
-  font: inherit;
   display: inline-flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
-  padding: 0;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-size: 0.9rem;
   text-align: left;
-  color: var(--accent);
-  background: none;
-  border: 0;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  text-decoration: underline;
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+
+.trigger:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.trigger[aria-expanded="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.trigger:disabled {
+  cursor: progress;
+  opacity: 0.7;
 }
 
 .label {
+  display: inline-block;
+  padding: 0 0.4rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--accent-soft);
+  border-radius: 0.35rem;
+}
+
+.name {
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .where {
   color: var(--muted);
-  font-size: 0.875rem;
-  text-decoration: none;
+  font-size: 0.82rem;
+}
+
+.chevron {
+  margin-left: auto;
+  color: var(--muted);
+  transition: transform 0.2s var(--ease);
+}
+
+.trigger[aria-expanded="true"] .chevron {
+  transform: rotate(90deg);
 }
 
 .passage {
-  padding: 0.75rem var(--space-4);
-  background: var(--background);
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
+  animation: reveal 0.2s var(--ease);
+}
+
+.passage figcaption {
+  margin-bottom: 0.4rem;
 }
 
 .passage blockquote {
+  font-size: 0.95rem;
+  line-height: 1.6;
   white-space: pre-wrap;
-  line-height: 1.5;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.loading {
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 .unavailable {
-  color: var(--danger);
-  font-size: 0.9375rem;
+  composes: noticeError from "../ui.module.css";
 }
