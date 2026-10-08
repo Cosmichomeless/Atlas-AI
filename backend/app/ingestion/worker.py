@@ -12,6 +12,7 @@ from types import FrameType
 from app.core.config import get_settings
 from app.core.db import get_sessionmaker
 from app.embeddings.registry import get_embedding_provider
+from app.features.documents.extraction import ExtractionLimits
 from app.features.documents.storage import get_storage
 from app.ingestion.chunking import ChunkPolicy
 from app.ingestion.service import run_once
@@ -23,6 +24,7 @@ def run(stop: threading.Event) -> None:
     settings = get_settings()
     storage = get_storage()
     policy = ChunkPolicy.from_settings(settings)
+    limits = ExtractionLimits.from_settings(settings)
     embedder = get_embedding_provider()
     sessionmaker = get_sessionmaker()
     logger.info("Worker de ingestión iniciado")
@@ -37,6 +39,7 @@ def run(stop: threading.Event) -> None:
                     embedder=embedder,
                     lease_seconds=settings.ingestion_lease_seconds,
                     max_attempts=settings.ingestion_max_attempts,
+                    limits=limits,
                 )
         except Exception:
             logger.exception("Fallo del worker (¿base de datos no disponible?); se reintenta")

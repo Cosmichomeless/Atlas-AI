@@ -153,6 +153,28 @@ uv run python -m app.ingestion.worker   # from backend/; run as many as you like
   password-protected or damaged PDF, empty or non-UTF-8 text). `extract_or_fail(document, storage)` stores that
   cause in `error_summary` and moves the `PROCESSING` document to `FAILED`; the worker owns the commit.
 
+#### Parsing limits and isolation
+
+Uploaded files are untrusted, so parsing has hard limits. Exceeding one is an `ExtractionError` with a
+user-readable cause (the document ends `FAILED`), never a crash or a stuck worker:
+
+| Setting | Default | Limit |
+|---|---|---|
+| `MAX_UPLOAD_MB` | 20 | File size (read with a cap; an oversized file is never fully loaded) |
+| `EXTRACTION_MAX_PAGES` | 500 | PDF pages, checked before reading any page |
+| `EXTRACTION_MAX_CHARS` | 5000000 | Extracted characters (PDF total or text file) |
+| `EXTRACTION_TIMEOUT_SECONDS` | 60 | Wall-clock time; must be lower than `INGESTION_LEASE_SECONDS` |
+| `EXTRACTION_ISOLATED` | `true` | Parse in a subprocess (turn off only in tests) |
+
+In the worker, parsing runs in a child interpreter (`python -I parsing.py`) with an **empty environment** (no
+credentials), a CPU `rlimit` and the file passed through stdin. `subprocess.run(timeout=)` kills and reaps the
+child when the deadline passes, so no hung process is left behind; if the worker itself disappears, a
+`SIGALRM` watchdog inside the child ends it. A crash, a signal or a malformed answer becomes a clean failure.
+Nothing is written to disk during parsing, so there are no temporary files to orphan.
+
+Limitation: memory is not capped (`RLIMIT_AS` is unreliable on macOS); it is bounded indirectly by the size,
+page and character limits plus the CPU limit and the kill on timeout.
+
 ### Chunking policy
 
 `app/ingestion/chunking.py` turns the extracted blocks into the fragments that get embedded
