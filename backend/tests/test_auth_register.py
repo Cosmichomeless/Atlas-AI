@@ -94,3 +94,25 @@ def test_unique_constraint_decides_concurrent_registrations(
 
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "email_already_registered"
+
+
+def test_closed_registration_rejects_new_accounts_but_keeps_existing_ones(
+    client: TestClient, db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.config import get_settings
+
+    assert client.post(URL, json=VALID).status_code == 201
+
+    monkeypatch.setenv("REGISTRATION_ENABLED", "false")
+    get_settings.cache_clear()
+    try:
+        refused = client.post(URL, json={**VALID, "email": "otra@example.com"})
+        existing = client.post("/api/v1/auth/login", json=VALID)
+    finally:
+        monkeypatch.delenv("REGISTRATION_ENABLED")
+        get_settings.cache_clear()
+
+    assert refused.status_code == 403
+    assert refused.json()["error"]["code"] == "registration_closed"
+    assert db_session.query(User).filter(User.email == "otra@example.com").count() == 0
+    assert existing.status_code == 200

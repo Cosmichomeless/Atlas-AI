@@ -50,7 +50,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Registrar una cuenta */
+        /**
+         * Registrar una cuenta
+         * @description Crea una cuenta. Si el servidor cierra el registro (`REGISTRATION_ENABLED=false`) responde 403 con el código `registration_closed`.
+         */
         post: operations["register_api_v1_auth_register_post"];
         delete?: never;
         options?: never;

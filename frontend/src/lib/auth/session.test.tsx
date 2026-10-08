@@ -215,6 +215,23 @@ describe("registro", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Ya existe una cuenta con ese email.");
   });
 
+  it("explica que el registro está cerrado y no abre sesión", async () => {
+    const { calls } = mockApi({
+      "GET /api/v1/auth/me": anonymous,
+      "POST /api/v1/auth/register": () =>
+        errorResponse(403, "registration_closed", "El registro está cerrado en este servidor."),
+    });
+
+    renderWith(<AuthForm mode="register" />);
+    await userEvent.type(screen.getByLabelText("Email"), "ana@example.com");
+    await userEvent.type(screen.getByLabelText("Contraseña"), "correct horse battery");
+    await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("El registro está cerrado en este servidor.");
+    expect(calls.some((c) => c.path === "/api/v1/auth/login")).toBe(false);
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
   it("asocia los errores de validación al campo correspondiente", async () => {
     mockApi({
       "GET /api/v1/auth/me": anonymous,

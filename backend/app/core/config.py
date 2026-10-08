@@ -44,6 +44,13 @@ class Settings(BaseSettings):
     cookie_secure: bool | None = Field(
         default=None, description="Atributo Secure; por defecto solo activo en producción."
     )
+    registration_enabled: bool = Field(
+        default=True,
+        description=(
+            "Permite crear cuentas nuevas. Con false, POST /auth/register responde 403 "
+            "`registration_closed`; las cuentas existentes siguen funcionando."
+        ),
+    )
 
     database_url: str = Field(
         description="URL SQLAlchemy de PostgreSQL, p. ej. postgresql+psycopg://user:pass@host:5433/db",
