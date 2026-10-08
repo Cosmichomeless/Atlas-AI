@@ -22,7 +22,7 @@ La metodología de evaluación, los resultados reproducibles y sus límites est�
 | `infra/postgres/init/` | Script de inicialización de la base de datos (crea `atlas_test`, habilita `vector`) |
 | `docker-compose.yml` | PostgreSQL 16 + pgvector, o la pila completa (migraciones, API, worker y frontend) |
 | `.env.example` | Variables de entorno documentadas (se copia a `.env`) |
-| `docs/` | Arquitectura, [evaluación](docs/evaluation.md) y notas del proyecto |
+| `docs/` | Arquitectura, [evaluación](docs/evaluation.md), [despliegue en Azure](docs/azure-deployment.md) y notas del proyecto |
 
 ## Requisitos
 
