@@ -17,7 +17,7 @@ La metodología de evaluación, los resultados reproducibles y sus límites est�
 
 | Ruta | Contenido |
 | --- | --- |
-| `frontend/` | Aplicación Next.js 16 (App Router, React 19, TypeScript). [README](frontend/README.md) |
+| `frontend/` | Aplicación Next.js 16 (App Router, React 19, TypeScript) y su `Dockerfile`. [README](frontend/README.md) |
 | `backend/` | API FastAPI (Python 3.12, uv), SQLAlchemy, Alembic. [README](backend/README.md) |
 | `infra/postgres/init/` | Script de inicialización de la base de datos (crea `atlas_test`, habilita `vector`) |
 | `docker-compose.yml` | PostgreSQL 16 + pgvector para desarrollo local |
