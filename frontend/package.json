@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "api:types": "openapi-typescript ../backend/openapi.json -o src/lib/api/schema.d.ts",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "screenshots": "CAPTURE_SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts"
   },
   "dependencies": {
     "next": "16.4.0",

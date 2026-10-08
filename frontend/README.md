@@ -13,6 +13,7 @@ Aplicación web en Next.js (App Router) y TypeScript.
 | `npm test` | Tests (Vitest + Testing Library, entorno jsdom, API simulada) |
 | `npm run api:types` | Regenera `src/lib/api/schema.d.ts` desde `../backend/openapi.json` |
 | `npm run e2e` | Recorrido extremo a extremo con Playwright (ver abajo) |
+| `npm run screenshots` | Regenera las capturas del README en `../docs/screenshots/` (ver «Capturas») |
 | `npm run build` | Build de producción |
 | `npm start` | Sirve el build de producción |
 
@@ -177,3 +178,25 @@ origen desde el que se sirve el frontend.
 día respecto a `backend/openapi.json` (`npm run api:types` no debe dejar diff). `LayoutProps`/`PageProps` son
 tipos globales que genera Next, por eso el `typegen` previo: en un clon limpio `tsc` falla sin él. Las pruebas
 E2E de Playwright necesitan backend y base de datos y no se ejecutan en este workflow.
+
+## Capturas
+
+Las capturas del README (`docs/screenshots/`, PNG de menos de 400 KB) se generan con
+`e2e/screenshots.spec.ts` contra el mismo stack real que los E2E (Next compilado, API, worker y PostgreSQL con
+pgvector, proveedores `fake`), con datos ficticios (`ana@example.com` y tres documentos de ejemplo) para que el
+resultado sea reproducible. No es una prueba: solo corre con la variable `CAPTURE_SCREENSHOTS`, que fija el script.
+
+```bash
+E2E_DATABASE_URL=postgresql+psycopg://atlas:atlas_dev_password@localhost:5433/atlas_e2e npm run screenshots
+```
+
+Igual que los E2E, **recrea la base de datos indicada (debe llamarse `*_e2e`)**. Revisa las seis imágenes tras
+cada cambio visible (portada, acceso, documentos, respuesta con cita, sin respuesta y móvil) y súbelas en el mismo PR.
+
+## Diseño
+
+Colores, radios, sombras, foco y movimiento salen de las variables de `src/app/globals.css` (claro y oscuro según el
+sistema, con `prefers-reduced-motion`). `src/components/ui.module.css` reúne botones, campos, tarjetas y avisos que los
+módulos de cada componente reutilizan con `composes`; `composes` no admite selectores descendientes, así que los
+elementos reutilizados llevan su propia clase. Los iconos y el logo (`icons.tsx`, `logo.tsx`) son SVG en línea
+decorativos (`aria-hidden`): el significado lo da siempre el texto.
