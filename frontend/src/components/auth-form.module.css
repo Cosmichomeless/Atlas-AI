@@ -1,83 +1,93 @@
 .page {
-  display: grid;
-  place-items: center;
+  display: flex;
   flex: 1;
-  padding: var(--space-6) var(--space-4);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-4);
+  background:
+    radial-gradient(40rem 22rem at 50% -6rem, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    var(--background);
+}
+
+.brand {
+  display: flex;
 }
 
 .form {
+  composes: card from "./ui.module.css";
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  width: min(100%, 24rem);
+  width: min(100%, 25rem);
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .title {
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  font-size: 0.9375rem;
-  font-weight: 500;
+  gap: 0.4rem;
 }
 
 .field label {
-  font-size: 0.9375rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
-.field input {
-  font: inherit;
-  font-weight: 400;
-  padding: 0.625rem 0.75rem;
-  color: var(--foreground);
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.field input[aria-invalid="true"] {
-  border-color: var(--danger);
+.input {
+  composes: input from "./ui.module.css";
 }
 
 .hint {
   color: var(--muted);
   font-size: 0.8125rem;
-  font-weight: 400;
 }
 
-.fieldError,
-.formError {
+.fieldError {
   color: var(--danger);
-  font-size: 0.875rem;
-  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.formError {
+  composes: noticeError from "./ui.module.css";
 }
 
 .submit {
-  font: inherit;
-  font-weight: 600;
-  padding: 0.7rem 1rem;
-  color: var(--on-accent);
-  background: var(--accent);
-  border: 0;
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
-.submit:disabled {
-  opacity: 0.6;
-  cursor: progress;
+  composes: primary large from "./ui.module.css";
+  margin-top: 0.25rem;
 }
 
 .alt {
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .alt a {
-  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.alt a:hover {
+  text-decoration: underline;
 }

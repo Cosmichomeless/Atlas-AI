@@ -1,17 +1,55 @@
 .item {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem var(--space-4);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem var(--space-4);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  transition:
+    box-shadow 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 .main {
   display: flex;
+  flex: 1 1 16rem;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.kind {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+}
+
+.kind[data-kind="pdf"] {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.kind[data-kind="txt"] {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
 }
 
 .name {
@@ -21,36 +59,65 @@
 
 .meta {
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 
 .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   flex-shrink: 0;
-  padding: 0.125rem 0.625rem;
-  font-size: 0.8125rem;
+  padding: 0.2rem 0.65rem;
+  color: var(--muted);
+  font-size: 0.78rem;
   font-weight: 600;
-  border: 1px solid var(--border);
+  background: var(--surface-2);
   border-radius: 999px;
+}
+
+.dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  background: currentColor;
+  border-radius: 50%;
 }
 
 .status[data-status="READY"] {
   color: var(--success);
-  border-color: var(--success);
+  background: var(--success-soft);
 }
 
 .status[data-status="FAILED"] {
   color: var(--danger);
-  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.status[data-status="UPLOADED"],
+.status[data-status="PROCESSING"] {
+  color: var(--warning);
+  background: var(--warning-soft);
+}
+
+.status[data-status="PROCESSING"] .dot {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
 }
 
 .cause,
 .error {
-  font-size: 0.875rem;
-}
-
-.cause,
-.error {
+  order: 3;
+  flex-basis: 100%;
+  padding: 0.55rem 0.75rem;
   color: var(--danger);
+  font-size: 0.875rem;
+  background: var(--danger-soft);
+  border-radius: var(--radius-sm);
 }
 
 .actions {
@@ -58,26 +125,26 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  margin-left: auto;
   font-size: 0.875rem;
 }
 
-.actions button {
-  font: inherit;
-  padding: 0.3rem 0.8rem;
-  color: var(--foreground);
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
+.action {
+  composes: button from "../ui.module.css";
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
 }
 
-.actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.confirm {
+  composes: danger from "../ui.module.css";
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
 }
 
-.actions .danger {
-  color: var(--on-accent);
-  background: var(--danger);
-  border-color: var(--danger);
+@media (max-width: 30rem) {
+  .actions {
+    margin-left: 0;
+  }
 }

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -63,7 +63,11 @@ describe("QuestionView", () => {
     render(<QuestionView />);
     await ask();
 
-    expect(await screen.findByText("El plazo es de 30 días [S1].")).toBeInTheDocument();
+    // La marca [S1] se pinta como etiqueta propia: el texto de la respuesta es el mismo, en varios nodos.
+    const answer = await screen.findByRole("article", { name: "Respuesta" });
+    expect(answer).toHaveTextContent("El plazo es de 30 días [S1].");
+    // Una etiqueta en el texto y otra en el botón de la fuente.
+    expect(within(answer).getAllByText("[S1]")).toHaveLength(2);
     expect(screen.getByRole("button", { name: /\[S1\] doc-1\.pdf p\. 3/ })).toBeInTheDocument();
     expect(calls.find((call) => call.method === "POST")?.body).toEqual({ question: "¿Cuál es el plazo?" });
   });
