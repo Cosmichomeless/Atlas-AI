@@ -9,6 +9,7 @@ import signal
 import threading
 from types import FrameType
 
+import app.models  # noqa: F401  (registra todos los modelos: ver app/models.py)
 from app.core.config import get_settings
 from app.core.db import get_sessionmaker
 from app.embeddings.registry import get_embedding_provider

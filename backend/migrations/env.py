@@ -10,12 +10,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-# Importar aquí los módulos con modelos para que autogenerate los detecte.
-from app.embeddings import models as _embeddings  # noqa: E402, F401
-from app.features.auth import models as _auth  # noqa: E402, F401
-from app.features.documents import models as _documents  # noqa: E402, F401
-from app.features.usage import models as _usage  # noqa: E402, F401
-from app.features.users import models as _users  # noqa: E402, F401
+# Importar aquí todos los modelos para que autogenerate los detecte.
+import app.models  # noqa: E402, F401
 
 target_metadata = Base.metadata
 

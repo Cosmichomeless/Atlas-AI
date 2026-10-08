@@ -1,7 +1,9 @@
 """Proveedor falso: determinista, sin red y sin coste, para desarrollo y tests."""
 
+import re
 from collections.abc import Callable, Sequence
 
+from app.answers.prompt import INSUFFICIENT_MARKER, SOURCES_CLOSE, SOURCES_OPEN
 from app.llm.provider import LLMParams, LLMProvider, LLMSpec, Message, RawCompletion, Usage
 
 FAKE_VERSION = "1"
@@ -10,6 +12,34 @@ Responder = Callable[[Sequence[Message]], str]
 
 def _tokens(text: str) -> int:
     return len(text.split())
+
+
+_WORD = re.compile(r"\w{4,}")
+_SOURCE = re.compile(r"^\[(S\d+)\][^\n]*\n", re.MULTILINE)
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+
+
+def grounded_responder(messages: Sequence[Message]) -> str:
+    """Responde con la frase de las fuentes que más palabras comparte con la pregunta y la cita.
+
+    Si ninguna comparte palabras declara `SIN_EVIDENCIA`, como haría un modelo real. Es
+    determinista y sin red: permite probar de extremo a extremo subida → pregunta → cita.
+    """
+    user = next(m.content for m in reversed(messages) if m.role == "user")
+    sources, _, question = user.partition(SOURCES_CLOSE)
+    sources = sources.removeprefix(SOURCES_OPEN)
+    wanted = set(_WORD.findall(question.lower()))
+    best: tuple[int, str, str] | None = None
+    labels = list(_SOURCE.finditer(sources))
+    for position, found in enumerate(labels):
+        end = labels[position + 1].start() if position + 1 < len(labels) else len(sources)
+        for sentence in _SENTENCE.split(sources[found.end() : end].strip()):
+            overlap = len(wanted & set(_WORD.findall(sentence.lower())))
+            if overlap and (best is None or overlap > best[0]):
+                best = (overlap, found.group(1), sentence.strip())
+    if best is None:
+        return INSUFFICIENT_MARKER
+    return f"{best[2].rstrip('.')} [{best[1]}]."
 
 
 class FakeLLMProvider(LLMProvider):

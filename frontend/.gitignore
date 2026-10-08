@@ -42,3 +42,8 @@ next-env.d.ts
 
 # Excepción: los ejemplos de configuración sí se versionan (sin secretos)
 !.env.example
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/

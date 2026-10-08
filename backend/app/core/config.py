@@ -156,6 +156,10 @@ class Settings(BaseSettings):
     embedding_dimensions: int = Field(default=1536, gt=0)
     llm_provider: Provider = "fake"
     llm_model: str = "gpt-4o-mini"
+    fake_llm_grounded: bool = Field(
+        default=False,
+        description="El LLM fake responde con lo que dicen las fuentes y las cita (E2E y demos).",
+    )
     llm_temperature: float = Field(
         default=0.0, ge=0, le=2, description="Temperatura de generación (0 = lo más determinista)."
     )

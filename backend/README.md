@@ -269,6 +269,9 @@ chosen by `LLM_PROVIDER` through `get_llm_provider()`. Model and parameters come
 
 - `fake` (default, also used by the tests): deterministic, no network; records every conversation in `calls` and
   accepts a custom `responder`, so tests can script any answer.
+- `FAKE_LLM_GROUNDED=true` (opt-in, off by default): the `fake` provider answers with the sentence of the
+  retrieved sources that shares the most words with the question and cites it as `[Sn]`; with no overlap it
+  abstains. It exists so the end-to-end journey can reach a real citation without a paid provider.
 - `openai`: `POST {OPENAI_BASE_URL}/chat/completions` with `OPENAI_API_KEY`. Errors become `LLMError` without the
   key or the prompt; tests use a mocked transport.
 - Every `Completion` carries the `LLMSpec` (`spec.key` → `openai/gpt-4o-mini/v1`), the `LLMParams` that produced
@@ -862,3 +865,10 @@ rolled back.
 Verify the extension: `curl localhost:8000/api/v1/health/db` → `{"status":"ok","pgvector_version":"0.8.7"}`.
 
 Tests use the `atlas_test` database (override with `TEST_DATABASE_URL`); start the database before `uv run pytest`.
+
+### End-to-end backend launcher
+
+`python scripts/e2e_backend.py` is what the frontend Playwright suite starts (see `frontend/README.md`). It
+recreates the database named by `DATABASE_URL` (its name **must** end in `_e2e`, otherwise it refuses), runs
+`alembic upgrade head`, and launches the API (`E2E_API_PORT`, default 8765) and the ingestion worker with the
+`fake` embedding provider and `FAKE_LLM_GROUNDED=true`, on a temporary `STORAGE_DIR` that is removed on exit.
