@@ -94,6 +94,15 @@ class Settings(BaseSettings):
         default=1000, ge=1, description="Longitud máxima de una pregunta, en caracteres."
     )
 
+    usage_daily_questions: int = Field(
+        default=100, ge=1, description="Preguntas que un usuario puede hacer por día (UTC)."
+    )
+    usage_daily_tokens: int = Field(
+        default=300_000,
+        ge=1,
+        description="Tokens (de entrada y salida) que un usuario puede gastar por día (UTC).",
+    )
+
     search_default_k: int = Field(
         default=5, ge=1, description="Fragmentos que devuelve una búsqueda si no se indica `k`."
     )

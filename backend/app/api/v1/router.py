@@ -7,6 +7,7 @@ from app.features.documents.router import router as documents_router
 from app.features.health.router import router as health_router
 from app.features.questions.router import router as questions_router
 from app.features.search.router import router as search_router
+from app.features.usage.router import router as usage_router
 
 API_V1_PREFIX = "/api/v1"
 
@@ -23,3 +24,4 @@ api_router.include_router(documents_router)
 api_router.include_router(search_router)
 
 api_router.include_router(questions_router)
+api_router.include_router(usage_router)

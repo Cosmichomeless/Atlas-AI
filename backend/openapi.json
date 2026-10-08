@@ -976,7 +976,7 @@
           "questions"
         ],
         "summary": "Preguntar a mis documentos",
-        "description": "Responde con fragmentos de mis documentos listos (READY) y cita sus fuentes.\n\nSin evidencia suficiente responde 200 con `status: \"abstained\"` y sin texto; un fallo del\nproveedor de lenguaje es un 503 `llm_unavailable`, que no es lo mismo que abstenerse.",
+        "description": "Responde con fragmentos de mis documentos listos (READY) y cita sus fuentes.\n\nSin evidencia suficiente responde 200 con `status: \"abstained\"` y sin texto; un fallo del\nproveedor de lenguaje es un 503 `llm_unavailable`, que no es lo mismo que abstenerse.\n\nSi el usuario agotó su cuota diaria (preguntas o tokens) responde 429 `usage_limit_exceeded`\nsin llamar a ningún proveedor. El consumo se anota (solo contadores) aunque la petición falle.",
         "operationId": "ask_question_api_v1_questions_post",
         "requestBody": {
           "content": {
@@ -1049,8 +1049,79 @@
               }
             }
           },
+          "429": {
+            "description": "Demasiadas solicitudes. Inténtalo de nuevo más tarde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "503": {
             "description": "Servicio no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/usage": {
+      "get": {
+        "tags": [
+          "usage"
+        ],
+        "summary": "Mi uso de hoy y mis cuotas",
+        "operationId": "my_usage_api_v1_usage_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageToday"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tienes permiso para realizar esta acción.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Los datos enviados no son válidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autenticación requerida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1981,6 +2052,58 @@
         ],
         "title": "SearchSource",
         "description": "Dónde está el fragmento: lo necesario para citarlo y abrir el original."
+      },
+      "UsageToday": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "questions": {
+            "type": "integer",
+            "title": "Questions"
+          },
+          "embedding_calls": {
+            "type": "integer",
+            "title": "Embedding Calls"
+          },
+          "llm_calls": {
+            "type": "integer",
+            "title": "Llm Calls"
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens"
+          },
+          "daily_questions": {
+            "type": "integer",
+            "title": "Daily Questions",
+            "description": "Preguntas máximas al día."
+          },
+          "daily_tokens": {
+            "type": "integer",
+            "title": "Daily Tokens",
+            "description": "Tokens máximos (entrada + salida) al día."
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "questions",
+          "embedding_calls",
+          "llm_calls",
+          "input_tokens",
+          "output_tokens",
+          "daily_questions",
+          "daily_tokens"
+        ],
+        "title": "UsageToday",
+        "description": "Uso de hoy (día UTC) y cuotas. Solo contadores: nunca el contenido de las preguntas."
       },
       "UserPublic": {
         "properties": {
