@@ -73,14 +73,18 @@ frontend publicado **solo muestra el flujo completo si puede llegar a una API**.
    cambia (p. ej. un túnel nuevo), hay que volver a desplegar.
 4. No hace falta `NEXT_OUTPUT`: esa variable solo la usa la imagen Docker (`standalone`).
 
-La instancia del proyecto está en <https://atlas-ai-one-silk.vercel.app>. **No he podido abrirla desde el entorno
-donde se desarrolló** (su red bloquea ese dominio), así que no puedo confirmar qué versión sirve ni a qué API apunta;
-compruébalo abriéndola tú.
+La instancia del proyecto está en <https://atlas-ai-one-silk.vercel.app>. Vercel despliega cada `push` a `main` en
+*Production* y cada PR en *Preview*, y GitHub guarda el resultado: `gh api repos/<usuario>/<repo>/deployments`. El último
+despliegue de *Production* revisado (el commit de #140, `83a6299`) terminó en `success`, es decir, **el frontend
+compila y se publica**. Lo que no he podido hacer es abrir la web (la red del entorno donde se desarrolló bloquea
+`vercel.app`), así que no he visto cómo se ve ni confirmado a qué API apunta `NEXT_PUBLIC_API_BASE_URL`; sin una API
+accesible, la aplicación no funciona más allá de la portada y el acceso.
 
 ## Qué está desplegado y qué no
 
 - **Verificado**: el flujo completo (API, worker, PostgreSQL con pgvector, frontend compilado) con los E2E de Playwright
   y las pruebas de humo, y los health checks del worker.
 - **Sin verificar**: los contenedores de Docker Compose (el entorno de desarrollo no tiene Docker; la configuración se
-  valida con `docker compose config` y tests de ficheros), y cualquier despliegue concreto en Vercel.
+  valida con `docker compose config` y tests de ficheros) y el aspecto y la conexión del frontend ya publicado en Vercel
+  (solo consta que el despliegue terminó bien).
 - **Sin desplegar**: no hay API pública permanente, ni dominio propio, ni HTTPS gestionado.
