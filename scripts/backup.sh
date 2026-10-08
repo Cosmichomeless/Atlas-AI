@@ -51,7 +51,9 @@ echo "Copia creada: $USERS usuarios, $DOCS documentos, $CHUNKS fragmentos."
 
 if [ "$KEEP" -gt 0 ]; then
   # Los nombres llevan la fecha: ordenados alfabéticamente, los más antiguos van primero.
-  mapfile -t ALL < <(find "$OUT" -maxdepth 1 -type d -name 'atlas-*' | sort)
+  # Sin `mapfile`: el bash 3.2 de macOS no lo tiene.
+  ALL=()
+  while IFS= read -r dir; do ALL+=("$dir"); done < <(find "$OUT" -maxdepth 1 -type d -name 'atlas-*' | sort)
   EXTRA=$(( ${#ALL[@]} - KEEP ))
   if [ "$EXTRA" -gt 0 ]; then
     for old in "${ALL[@]:0:EXTRA}"; do echo "Eliminando copia antigua: $old"; rm -rf -- "$old"; done
