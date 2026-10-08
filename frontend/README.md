@@ -169,3 +169,11 @@ docker run -d -p 3000:3000 atlas-frontend
 `NEXT_PUBLIC_API_BASE_URL` es pública (acaba en el JavaScript del navegador) y se fija **al construir**: cambiarla
 exige reconstruir la imagen. No pongas secretos en ella. En el backend, `FRONTEND_ORIGIN` debe coincidir con el
 origen desde el que se sirve el frontend.
+
+## Integración continua
+
+`.github/workflows/frontend.yml` se ejecuta en cada pull request (y en `main`): `npm ci`, `npm run lint`,
+`npx next typegen` + `npm run typecheck`, `npm test`, `npm run build` y que `src/lib/api/schema.d.ts` esté al
+día respecto a `backend/openapi.json` (`npm run api:types` no debe dejar diff). `LayoutProps`/`PageProps` son
+tipos globales que genera Next, por eso el `typegen` previo: en un clon limpio `tsc` falla sin él. Las pruebas
+E2E de Playwright necesitan backend y base de datos y no se ejecutan en este workflow.
