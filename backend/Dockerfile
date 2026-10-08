@@ -1,6 +1,7 @@
-# Imagen del backend de Atlas AI: la usan la API y el worker de ingestión (mismo código y migraciones).
-#   docker build -t atlas-backend backend/
-#   docker run --rm -p 8000:8000 -e DATABASE_URL=... atlas-backend          # API
+# Imagen del backend de Atlas AI: API y worker de ingestión salen de las mismas capas (mismo código y
+# mismas migraciones); solo cambian el comando y el health check.
+#   docker build -t atlas-backend backend/                                   # API (etapa por defecto)
+#   docker build --target ingestion -t atlas-ingestion backend/              # worker de ingestión
 #   docker run --rm -e DATABASE_URL=... atlas-backend alembic upgrade head   # migraciones
 # No lleva secretos ni datos: todo llega por variables de entorno y el volumen de /data.
 
@@ -16,7 +17,7 @@ COPY migrations ./migrations
 COPY alembic.ini ./
 RUN uv sync --frozen --no-dev
 
-FROM python:3.12-slim
+FROM python:3.12-slim AS runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/srv/.venv/bin:$PATH" \
@@ -29,6 +30,19 @@ WORKDIR /srv
 COPY --from=builder --chown=atlas:atlas /srv /srv
 USER atlas
 VOLUME ["/data"]
+
+# Worker de ingestión: no escucha en ningún puerto, su salud es un latido (ver app/ingestion/heartbeat.py).
+# SIGTERM lo detiene tras el documento en curso; el plazo de parada debe cubrir una extracción completa
+# (docker stop -t 90). Lo que no termine vuelve a la cola cuando vence su arriendo.
+FROM runtime AS ingestion
+ENV INGESTION_HEARTBEAT_FILE=/tmp/atlas-ingestion.heartbeat
+STOPSIGNAL SIGTERM
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD ["python", "-m", "app.ingestion.heartbeat"]
+CMD ["python", "-m", "app.ingestion.worker"]
+
+# API (última etapa: es la que construye `docker build` sin --target).
+FROM runtime AS api
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
     CMD ["python", "-c", "import os,urllib.request as u; u.urlopen(f'http://127.0.0.1:{os.environ[\"APP_PORT\"]}/health', timeout=2)"]

@@ -66,6 +66,11 @@ class Settings(BaseSettings):
         default=3, gt=0, description="Intentos de procesamiento antes de dejar el documento FAILED."
     )
 
+    ingestion_heartbeat_file: Path | None = Field(
+        default=None,
+        description="Archivo que el worker toca tras cada vuelta sana; lo usa el health check.",
+    )
+
     extraction_max_pages: int = Field(
         default=500, gt=0, description="Páginas máximas de un PDF; el exceso falla el documento."
     )
@@ -184,9 +189,9 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     openai_base_url: str = "https://api.openai.com/v1"
 
-    @field_validator("cookie_secure", mode="before")
+    @field_validator("cookie_secure", "ingestion_heartbeat_file", mode="before")
     @classmethod
-    def _empty_cookie_secure_means_default(cls, value: object) -> object:
+    def _empty_means_default(cls, value: object) -> object:
         return None if value == "" else value
 
     @property

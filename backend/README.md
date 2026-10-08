@@ -875,13 +875,14 @@ recreates the database named by `DATABASE_URL` (its name **must** end in `_e2e`,
 
 ## Container image
 
-`backend/Dockerfile` builds one image for the API and for the ingestion worker (same code, same migrations).
+`backend/Dockerfile` builds the API and the ingestion worker from one source tree (same code, same migrations).
 It is reproducible (`uv sync --frozen` from `uv.lock`, pinned base images), runs as a non-root user and holds
 no secrets or user files: `.dockerignore` keeps `.env`, `storage/`, tests and caches out of the context, and
 everything arrives through environment variables and the `/data` volume (`STORAGE_DIR=/data/storage`).
 
 ```bash
-docker build -t atlas-backend backend/
+docker build -t atlas-backend backend/                          # API (last stage, the default)
+docker build --target ingestion -t atlas-ingestion backend/     # ingestion worker
 docker run --rm -e DATABASE_URL=postgresql+psycopg://... atlas-backend alembic upgrade head   # migrations
 docker run -d -p 8000:8000 -e DATABASE_URL=... -e FRONTEND_ORIGIN=http://localhost:3000 \
   -v atlas_data:/data atlas-backend                                                          # API
@@ -890,3 +891,21 @@ docker run -d -p 8000:8000 -e DATABASE_URL=... -e FRONTEND_ORIGIN=http://localho
 The image declares a `HEALTHCHECK` on `GET /health` (liveness only: it stays healthy while the database is
 down, and `/api/v1/health/db` reports the database). `APP_PORT` (default 8000) sets the listening port. For
 `APP_ENV=production` the container refuses to start without `SECRET_KEY` (>= 32 characters).
+
+### Ingestion worker container
+
+The `ingestion` stage runs `python -m app.ingestion.worker` with the same code and migrations as the API:
+
+```bash
+docker run -d --name atlas-ingestion --stop-timeout 90 -e DATABASE_URL=... -v atlas_data:/data atlas-ingestion
+```
+
+- **No lost jobs.** `docker stop` sends SIGTERM: the worker finishes the document in progress and exits with
+  code 0, so `--stop-timeout` (or `stop_grace_period` in Compose) should exceed `EXTRACTION_TIMEOUT_SECONDS`
+  plus the embedding time. A document left in `PROCESSING` by a hard kill returns to the queue once its lease
+  (`INGESTION_LEASE_SECONDS`) expires, and documents uploaded while the worker is stopped stay `UPLOADED`.
+- **Same migrations as the API.** The worker never migrates; at start it waits until the database revision
+  equals the head shipped in the image (`app/core/schema.py`), so it can start before the migration job.
+- **Health check.** The worker rewrites `INGESTION_HEARTBEAT_FILE` after every healthy loop (the image sets
+  `/tmp/atlas-ingestion.heartbeat`; empty disables it) and `python -m app.ingestion.heartbeat` fails if the file
+  is older than `INGESTION_LEASE_SECONDS`.
